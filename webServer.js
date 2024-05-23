@@ -186,7 +186,7 @@ app.get("/user/list", (req, res) => {
 });
 
 app.get("/transactionHistory", async (req, res) => {
-  const sessionId = req.headers.sessionId || req.sessionID;
+  const sessionId = req.headers.sessionId ;
   let sessionData = req.session;
 
   if (!sessionData) {
@@ -195,7 +195,7 @@ app.get("/transactionHistory", async (req, res) => {
 
   const userId = sessionData.userId;
   if (!userId) {
-    return res.status(401).json({ error: "Unauthorized" });
+    return res..json({ error: "Unauthorized",sessionId:sessionId,sessionData:sessionData });
   }
 
   try {
@@ -355,7 +355,7 @@ app.get("/getPersonalAccounts", async (req, res) => {
   }
   const userId = sessionData.userId;
   if (!userId) {
-    return res.status(401).json({ error: "Unauthorized",sessionId:sessionId,sessionData:sessionData });
+    return res.json({ error: "Unauthorized",sessionId:sessionId,sessionData:sessionData });
   }
   const accounts = await Account.find({ userId }).lean();
 
