@@ -32,7 +32,7 @@ mongoose.set("strictQuery", false);
 mongoose
   .connect(process.env.DB_URI, { dbName: "bankSystem" })
   .then(() => {
-    app.listen(3000, "localhost", () => {
+    app.listen(3000,  () => {
       console.log(`Listening at http://localhost:3000 `);
     });
   })
