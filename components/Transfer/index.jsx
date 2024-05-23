@@ -5,7 +5,8 @@ import { useNavigate } from "react-router-dom";
 import { Card } from "react-bootstrap";
 import crypto from "crypto-browserify";
 
-const Transfer = ({sessionId}) => {
+
+const Transfer = () => {
   const navigate = useNavigate();
   const [userAccounts, setUserAccounts] = useState([]);
   const [accounts, setAccounts] = useState([]);
@@ -21,17 +22,16 @@ const Transfer = ({sessionId}) => {
   const [recipientUserId, setRecipientUserId] = useState("");
   const [description, setDescription] = useState("");
   const [transactionPassword, setTransactionPassword] = useState("");
+  const [templateName, setTemplateName] = useState("");
   const [showModal, setShowModal] = useState(false);
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
   const handleCloseModal = () => {
     setShowModal(false);
   };
 
   useEffect(() => {
     axios
-      .get(`/getAccounts`, {
-        withCredentials: true,
-        headers: { sessionId: sessionId },
-      })
+      .get(`/getAccounts`, { withCredentials: true })
       .then((res) => {
         setAccounts(res.data.accounts);
         setUserAccounts(res.data.userAccounts);
@@ -77,10 +77,9 @@ const Transfer = ({sessionId}) => {
           receiverUserId: recipientUserId,
           transactionPassword: hashedTransactionPassword,
         },
-        { withCredentials: true,headers: { sessionId: sessionId }, }
+        { withCredentials: true }
       );
       if (data) {
-        navigate("/");
         handleCloseModal(); // Close the modal
       }
     } catch (err) {
@@ -94,6 +93,40 @@ const Transfer = ({sessionId}) => {
       } else {
         alert("Transfer failed");
       }
+    }
+  };
+  const saveTemplate = async () => {
+    if (
+      !templateName ||
+      !selectedAccount.selectedAccountNumber ||
+      !recipientName ||
+      !selectedBank ||
+      !recipientAccount ||
+      !selectedAccount.selectedAccountType ||
+      !recipientUserId
+    ) {
+      alert("Шаардлагтай талбаруудыг бөглөнө үү!");
+      return;
+    }
+
+    try {
+      const data = await axios.post(
+        `/saveTemplate`,
+        {
+          templateName,
+          selectedAccountNumber: selectedAccount.selectedAccountNumber,
+          recipientName,
+          selectedBank,
+          recipientAccount,
+          selectedAccountType: selectedAccount.selectedAccountType,
+          recipientUserId,
+        },
+        { withCredentials: true }
+      );
+      console.log(data);
+      setShowTemplateModal(false);
+    } catch (error) {
+      console.error("Error saving template:", error);
     }
   };
 
@@ -270,6 +303,72 @@ const Transfer = ({sessionId}) => {
               </div>
             </div>
           </form>
+
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() => {
+              setShowTemplateModal(true);
+            }}
+            style={{
+              marginTop: "10px",
+              width: "150px",
+            }}
+          >
+            Save template
+          </button>
+          <div
+            className={`modal fade ${showTemplateModal ? "show" : ""}`}
+            id="templateModal"
+            tabIndex="-1"
+            role="dialog"
+            aria-labelledby="exampleModalLabel"
+            aria-hidden={!showTemplateModal}
+            style={{ display: showTemplateModal ? "block" : "none" }}
+          >
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                <div className="modal-header">
+                  <button
+                    type="button"
+                    className="close"
+                    data-dismiss="modal"
+                    aria-label="Close"
+                    onClick={() => setShowTemplateModal(false)}
+                  >
+                    <span aria-hidden="true">&times;</span>
+                  </button>
+                </div>
+                <div class="modal-body">
+                  <form>
+                    <div class="form-group">
+                      <label for="recipient-name" class="col-form-label">
+                        Template name:
+                      </label>
+                      <input
+                        type="text"
+                        class="form-control"
+                        id="recipient-name"
+                        value={templateName}
+                        onChange={(e) => setTemplateName(e.target.value)}
+                      />
+                    </div>
+                  </form>
+                </div>
+                <div class="modal-footer">
+                  <button
+                    type="button"
+                    class="btn btn-primary"
+                    onClick={() => {
+                      saveTemplate();
+                    }}
+                  >
+                    Save template
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </Card>
       )}
     </>
