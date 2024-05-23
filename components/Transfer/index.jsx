@@ -31,7 +31,7 @@ const Transfer = () => {
 
   useEffect(() => {
     axios
-      .get(`/getAccounts`, { withCredentials: true })
+      .get(`getAccounts`, { withCredentials: true })
       .then((res) => {
         setAccounts(res.data.accounts);
         setUserAccounts(res.data.userAccounts);
@@ -65,7 +65,7 @@ const Transfer = () => {
 
     try {
       const data = await axios.post(
-        `/transfer`,
+        `transfer`,
         {
           senderAccount: selectedAccount.selectedAccountNumber,
           recipientName: recipientName,
@@ -172,7 +172,7 @@ const Transfer = () => {
                   width: "400px",
                 }}
               >
-                Choose account
+                Данс сонгох
               </label>
               <select
                 id="inputState"
@@ -191,7 +191,7 @@ const Transfer = () => {
               </select>
             </div>
             <div className="form-group">
-              <label htmlFor="inputState">Choose bank</label>
+              <label htmlFor="inputState">Банк сонгох</label>
               <select
                 id="inputState"
                 className="form-control"
@@ -211,7 +211,7 @@ const Transfer = () => {
               <input
                 className="form-control"
                 type="text"
-                placeholder="Transfer amount"
+                placeholder="Шилжүүлэх дүн"
                 value={transferAmount}
                 onChange={(e) => setTransferAmount(e.target.value)}
               />
@@ -220,7 +220,7 @@ const Transfer = () => {
               <input
                 className="form-control"
                 type="text"
-                placeholder="Recipient account"
+                placeholder="Хүлээн авагчийн данс"
                 value={recipientAccount}
                 onChange={handleRecipientAccountChange}
               />
@@ -229,7 +229,7 @@ const Transfer = () => {
               <input
                 className="form-control"
                 type="text"
-                placeholder="Recipient name"
+                placeholder="Хүлээн авагчийн нэр"
                 value={recipientName}
                 onChange={(e) => setRecipientName(e.target.value)}
               />
@@ -238,7 +238,7 @@ const Transfer = () => {
               <input
                 className="form-control"
                 type="text"
-                placeholder="Description"
+                placeholder="Гүйлгээний утга"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
               />
@@ -248,7 +248,7 @@ const Transfer = () => {
               className="btn btn-primary"
               onClick={() => setShowModal(true)}
             >
-              Continue
+              Гүйлгээ хийх
             </button>
 
             <div
@@ -280,7 +280,7 @@ const Transfer = () => {
                           htmlFor="recipient-name"
                           className="col-form-label"
                         >
-                          Transaction password
+                          Гүйлгээний нууц үг
                         </label>
                         <input
                           type="password"
@@ -296,7 +296,7 @@ const Transfer = () => {
                   </div>
                   <div className="modal-footer">
                     <button type="submit" className="btn btn-primary">
-                      Do transfer
+                      Гүйлгээ хийх
                     </button>
                   </div>
                 </div>
@@ -315,7 +315,7 @@ const Transfer = () => {
               width: "150px",
             }}
           >
-            Save template
+            Загвар хадгалах
           </button>
           <div
             className={`modal fade ${showTemplateModal ? "show" : ""}`}
@@ -343,7 +343,7 @@ const Transfer = () => {
                   <form>
                     <div class="form-group">
                       <label for="recipient-name" class="col-form-label">
-                        Template name:
+                        Загварын нэр:
                       </label>
                       <input
                         type="text"
@@ -363,7 +363,7 @@ const Transfer = () => {
                       saveTemplate();
                     }}
                   >
-                    Save template
+                    Загвар хадгалах
                   </button>
                 </div>
               </div>
