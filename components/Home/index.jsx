@@ -1,7 +1,6 @@
 import { Container, Row, Col, Card } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./styles.css";
-import { API_BASE_URL } from "../../config.js";
 import axios from "axios";
 import React, { useState, useEffect } from "react";
 import moment from "moment";
@@ -33,10 +32,10 @@ const BentoUI = () => {
   useEffect(() => {
     axios
       .all([
-        axios.get(`${API_BASE_URL}/transactionHistory`, {
+        axios.get(`/transactionHistory`, {
           withCredentials: true,
         }),
-        axios.get(`${API_BASE_URL}/getPersonalAccounts`, {
+        axios.get(`/getPersonalAccounts`, {
           withCredentials: true,
         }),
       ])

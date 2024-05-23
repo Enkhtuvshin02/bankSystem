@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { API_BASE_URL } from "../../config.js";
+
 import { Navigate } from "react-router-dom";
 const Register = () => {
   const [loginName, setLoginName] = useState("");
@@ -10,7 +10,7 @@ const Register = () => {
     e.preventDefault();
     try {
       await axios
-        .post(`${API_BASE_URL}/auth/register`, { loginName, password })
+        .post(`/auth/register`, { loginName, password })
         .then((res) => {});
       navigate("/transfer");
     } catch (err) {

@@ -5,8 +5,6 @@ import { useNavigate } from "react-router-dom";
 import { Card } from "react-bootstrap";
 import crypto from "crypto-browserify";
 
-const API_BASE_URL = "http://localhost:3000";
-
 const Transfer = () => {
   const navigate = useNavigate();
   const [userAccounts, setUserAccounts] = useState([]);
@@ -30,7 +28,7 @@ const Transfer = () => {
 
   useEffect(() => {
     axios
-      .get(`${API_BASE_URL}/getAccounts`, { withCredentials: true })
+      .get(`/getAccounts`, { withCredentials: true })
       .then((res) => {
         setAccounts(res.data.accounts);
         setUserAccounts(res.data.userAccounts);
@@ -64,7 +62,7 @@ const Transfer = () => {
 
     try {
       const data = await axios.post(
-        `${API_BASE_URL}/transfer`,
+        `/transfer`,
         {
           senderAccount: selectedAccount.selectedAccountNumber,
           recipientName: recipientName,

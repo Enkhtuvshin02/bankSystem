@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { API_BASE_URL } from "../../config.js";
 
 const Login = ({ isLoggedIn, handleLogin }) => {
   const [loginName, setLoginName] = useState("");
@@ -12,7 +11,7 @@ const Login = ({ isLoggedIn, handleLogin }) => {
     e.preventDefault();
     try {
       const { data } = await axios.post(
-        `${API_BASE_URL}/auth/login`,
+        `/auth/login`,
         {
           loginName,
           password,

@@ -1,4 +1,3 @@
-import { API_BASE_URL } from "../../config.js";
 import axios from "axios";
 import moment from "moment";
 import React, { useState, useEffect } from "react";
@@ -18,7 +17,7 @@ const TransactionHistory = () => {
 
   useEffect(() => {
     axios
-      .get(`${API_BASE_URL}/transactionHistory`, {
+      .get(`/transactionHistory`, {
         withCredentials: true,
       })
       .then((res) => {
