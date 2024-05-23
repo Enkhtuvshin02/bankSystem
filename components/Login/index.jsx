@@ -18,8 +18,8 @@ const Login = ({ isLoggedIn, handleLogin }) => {
         },
         { withCredentials: true }
       );
-      console.log("Response Data:", data.sessionID);
-      handleLogin(data.sessionID);
+      console.log("Response Data:", data.sessionId);
+      handleLogin(data.sessionId);
       navigate("/");
     } catch (err) {
       console.error("Error Response:", err.response.data); // Log the error response
