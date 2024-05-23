@@ -8,7 +8,6 @@ const Login = ({ isLoggedIn, handleLogin }) => {
   const navigate = useNavigate();
 
   const Login = async (e) => {
-    console.log("Login test");
     e.preventDefault();
     try {
       const { data } = await axios.post(
@@ -19,11 +18,10 @@ const Login = ({ isLoggedIn, handleLogin }) => {
         },
         { withCredentials: true }
       );
-      console.log("Response Data:", data.sessionId);
-      handleLogin(data.sessionId);
+      handleLogin(data);
       navigate("/");
     } catch (err) {
-      console.error("Error Response:", err.response.data); // Log the error response
+      console.error(err);
       alert("Invalid credentials");
     }
   };
@@ -40,7 +38,7 @@ const Login = ({ isLoggedIn, handleLogin }) => {
         <form onSubmit={Login}>
           <div data-mdb-input-init class="form-outline mb-4">
             <label class="form-label" htmlFor="form2Example1">
-              Login Name
+              Нэвтрэх нэр
             </label>
             <input
               type="text"
@@ -53,7 +51,7 @@ const Login = ({ isLoggedIn, handleLogin }) => {
 
           <div data-mdb-input-init class="form-outline mb-4">
             <label class="form-label" htmlFor="form2Example1">
-              Password
+              Нууц үг
             </label>
             <input
               type="password"
@@ -76,13 +74,13 @@ const Login = ({ isLoggedIn, handleLogin }) => {
                 />
                 <label class="form-check-label" for="form2Example31">
                   {" "}
-                  Remember me{" "}
+                  Сануулах{" "}
                 </label>
               </div>
             </div>
 
             <div class="col">
-              <a href="#!">Forgot password?</a>
+              <a href="#!">Нууц үг сэргээх?</a>
             </div>
           </div>
 
@@ -92,17 +90,17 @@ const Login = ({ isLoggedIn, handleLogin }) => {
             data-mdb-ripple-init
             class="btn btn-primary btn-block mb-4"
           >
-            Login
+            Нэвтрэх
           </button>
           <div class="text-center">
             <p>
-              Not a member?{" "}
+              Хэрэглэгч биш үү?{" "}
               <a
                 onClick={() => {
                   navigate("/register");
                 }}
               >
-                Register
+                Бүртгүүлэх
               </a>
             </p>
           </div>
