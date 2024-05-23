@@ -346,7 +346,7 @@ app.get("/getBanks", async (req, res) => {
 });
 
 app.get("/getPersonalAccounts", async (req, res) => {
-  const sessionId = req.headers.sessionId || req.sessionID;
+  const sessionId = req.headers.sessionId;
 
   let sessionData = req.session;
 
@@ -355,7 +355,7 @@ app.get("/getPersonalAccounts", async (req, res) => {
   }
   const userId = sessionData.userId;
   if (!userId) {
-    return res.status(401).json({ error: "Unauthorized" });
+    return res.status(401).json({ error: "Unauthorized",sessionId:sessionId,sessionData:sessionData });
   }
   const accounts = await Account.find({ userId }).lean();
 
