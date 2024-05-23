@@ -23,12 +23,16 @@ const AppContent = () => {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(null);
   const [loggedUsersName, setloggedUsersName] = useState(null);
+  const [sessionId, setSessionId] = useState("");
   useEffect(() => {
     axios
-      .get(`/isLoggedIn`, { withCredentials: true })
+      .get(`/isLoggedIn`, {
+        withCredentials: true,
+        headers: { sessionId: sessionId },
+      })
       .then(
         (res) => {
-          console.log("changed "+res.data.accounts);
+          console.log(res.data.username);
           setIsLoggedIn(res.data.isLoggedIn);
           setloggedUsersName(res.data.username);
           setLoading(false);
@@ -51,7 +55,8 @@ const AppContent = () => {
     }
   }, [isLoggedIn, navigate]);
 
-  const handleLogin = () => {
+  const handleLogin = (sessionId) => {
+    setSessionId(sessionId);
     setIsLoggedIn(true);
   };
 
@@ -85,9 +90,15 @@ const AppContent = () => {
               <Login isLoggedIn={isLoggedIn} handleLogin={handleLogin} />
             }
           />
-          <Route path="/" element={<Home />} />
-          <Route path="/transactionHistory" element={<TransactionHistory />} />
-          <Route path="/transfer" element={<Transfer />} />
+          <Route path="/" element={<Home sessionId={sessionId} />} />
+          <Route
+            path="/transactionHistory"
+            element={<TransactionHistory sessionId={sessionId} />}
+          />
+          <Route
+            path="/transfer"
+            element={<Transfer sessionId={sessionId} />}
+          />
         </Routes>
       </div>
     </>
