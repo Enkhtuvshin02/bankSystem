@@ -30,6 +30,7 @@ const BentoUI = (sessionId) => {
   });
 
   useEffect(() => {
+    console.log("session id in home before send req "+sessionId)
     axios
       .all([
         axios.get(`/transactionHistory`, {
