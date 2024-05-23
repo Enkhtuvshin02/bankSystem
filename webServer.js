@@ -52,7 +52,6 @@ mongoose
     console.log(err);
   });
 
-// Session schema for fetching session data directly from MongoDB
 const sessionSchema = new mongoose.Schema(
   {},
   { strict: false, collection: "sessions" }
@@ -79,19 +78,13 @@ app.get("/", (req, res) => {
 });
 
 app.get("/isLoggedIn", async (req, res) => {
-  const sessionId = req.headers.sessionid;
-  let sessionData = req.session;
-
-  if (!sessionData) {
-    sessionData = await getSessionData(sessionId);
-  }
-
-  if (!sessionData || !sessionData.isLoggedIn) {
+  const sessionCookie = req.cookies.session;
+  if (!sessionCookie || !sessionCookie.isLoggedIn) {
     res.json({ isLoggedIn: false, sessionId });
   } else {
     res.json({
-      isLoggedIn: sessionData.isLoggedIn,
-      username: sessionData.username,
+      isLoggedIn: sessionCookie.isLoggedIn,
+      username: sessionCookie.username,
     });
   }
 });
@@ -118,7 +111,7 @@ app.post("/auth/login", async (req, res) => {
     req.session.username = `${user.firstName} ${user.lastName}`;
 
     res.cookie("session", req.session);
-   res.status(200).json({ message: "success",sessionId:req.sessionID });
+    res.status(200).json({ message: "success", sessionId: req.sessionID });
   } catch (err) {
     console.error("Error logging in:", err);
     res.status(500).json({ message: "Failed to log in" });
@@ -181,16 +174,9 @@ app.get("/user/list", (req, res) => {
 
 app.get("/transactionHistory", async (req, res) => {
   const sessionCookie = req.cookies.session;
-  const sessionId = req.headers.sessionid;
-  let sessionData = req.session;
-
-  if (!sessionData) {
-    sessionData = await getSessionData(sessionId);
-  }
-
-  const userId = sessionData?.userId;
+  const userId = sessionCookie.userId;
   if (!userId) {
-    return res.status(401).json({ error: "Unauthorized", sessionId,sessionData,sessionCookie });
+    return res.status(401).json({ error: "Unauthorized" });
   }
 
   try {
@@ -214,17 +200,11 @@ app.get("/transactionHistory", async (req, res) => {
 });
 
 app.post("/transfer", async (req, res) => {
-  const sessionId = req.headers.sessionid;
-  let sessionData = req.session;
-
-  if (!sessionData) {
-    sessionData = await getSessionData(sessionId);
-  }
-
-  const senderUserId = sessionData?.userId;
+  const sessionCookie = req.cookies.session;
+  const senderUserId = sessionCookie.userId;
 
   if (!senderUserId) {
-    return res.status(401).json({ error: "Unauthorized",sessionId });
+    return res.status(401).json({ error: "Unauthorized" });
   }
 
   try {
@@ -289,16 +269,10 @@ app.post("/transfer", async (req, res) => {
 });
 
 app.get("/getAccounts", async (req, res) => {
-  const sessionId = req.headers.sessionid;
-  let sessionData = req.session;
-
-  if (!sessionData) {
-    sessionData = await getSessionData(sessionId);
-  }
-
-  const userId = sessionData?.userId;
+  const sessionCookie = req.cookies.session;
+  const userId = sessionCookie.userId;
   if (!userId) {
-    return res.status(401).json({ error: "Unauthorized",sessionId });
+    return res.status(401).json({ error: "Unauthorized" });
   }
 
   try {
@@ -347,16 +321,9 @@ app.get("/getBanks", async (req, res) => {
 
 app.get("/getPersonalAccounts", async (req, res) => {
   const sessionCookie = req.cookies.session;
-  const sessionId = req.headers.sessionid;
-  let sessionData = req.session;
-
-  if (!sessionData) {
-    sessionData = await getSessionData(sessionId);
-  }
-
-  const userId = sessionData?.userId;
+  const userId = sessionCookie.userId;
   if (!userId) {
-    return res.status(401).json({ error: "Unauthorized",sessionId,sessionData,sessionCookie });
+    return res.status(401).json({ error: "Unauthorized" });
   }
 
   try {
