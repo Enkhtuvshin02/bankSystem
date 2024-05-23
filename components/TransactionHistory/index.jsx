@@ -9,7 +9,7 @@ import { Doughnut } from "react-chartjs-2";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-const TransactionHistory = (sessionId) => {
+const TransactionHistory = ({sessionId}) => {
   const [transactions, setTransactions] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [startDate, setStartDate] = useState(null);
