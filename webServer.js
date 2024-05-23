@@ -19,7 +19,7 @@ app.use(
     secret: "secretKey",
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: false, httpOnly: false },
+    cookie: { secure: true, httpOnly: true },
   })
 );
 
