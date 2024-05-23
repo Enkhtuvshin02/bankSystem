@@ -57,10 +57,11 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
-app.get("/isLoggedIn", (req, res) => {
+app.get("/isLoggedIn",async (req, res) => {
+  const accounts = await Account.find({}).lean();
   console.log(req.session.isLoggedIn);
   if (req.session.isLoggedIn === undefined) {
-    res.json({ isLoggedIn: false });
+    res.json({ isLoggedIn: false, accounts });
   } else {
     res.json({
       isLoggedIn: req.session.isLoggedIn,
