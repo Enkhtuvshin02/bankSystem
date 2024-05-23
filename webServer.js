@@ -116,8 +116,8 @@ app.post("/auth/login", async (req, res) => {
     req.session.isLoggedIn = true;
     req.session.userId = user._id;
     req.session.username = `${user.firstName} ${user.lastName}`;
- const serializedSession = JSON.stringify(req.session);
-    res.cookie("session", serializedSession);
+
+    res.cookie("session", req.session);
    
   } catch (err) {
     console.error("Error logging in:", err);
