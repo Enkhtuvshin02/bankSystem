@@ -1,17 +1,16 @@
 import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import {
-  HashRouter as Router, // Change BrowserRouter to HashRouter
+  HashRouter as Router, 
   Route,
   Routes,
-  Navigate,
   useNavigate,
 } from "react-router-dom";
 
 import axios from "axios";
 import TransactionHistory from "./components/TransactionHistory/index.jsx";
 import Login from "./components/Login/index.jsx";
-import Topbar from "./components/TopBar/index.jsx";
+import Topbar from "./components/Topbar/index.jsx";
 import Transfer from "./components/Transfer/index.jsx";
 import Home from "./components/Home/index.jsx";
 import SideNav from "./components/SideNav/index.jsx";
@@ -22,19 +21,18 @@ const AppContent = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(null);
-  const [loggedUsersName, setloggedUsersName] = useState(null);
-  const [sessionId, setSessionId] = useState("");
+  const [loggedUsersName, setLoggedUsersName] = useState(null);
+  const [timer, setTimer] = useState(600); 
+
   useEffect(() => {
     axios
       .get(`/isLoggedIn`, {
         withCredentials: true,
-        headers: { sessionId: sessionId },
       })
       .then(
         (res) => {
-          console.log("main res.data "+res.data);
           setIsLoggedIn(res.data.isLoggedIn);
-          setloggedUsersName(res.data.username);
+          setLoggedUsersName(res.data.username);
           setLoading(false);
         },
         () => {
@@ -55,10 +53,25 @@ const AppContent = () => {
     }
   }, [isLoggedIn, navigate]);
 
-  const handleLogin = (sessionId) => {
-    console.log("sessionId in main "+sessionId);
-    setSessionId(sessionId);
+  useEffect(() => {
+    if (isLoggedIn) {
+      const interval = setInterval(() => {
+        setTimer((prevTimer) => {
+          if (prevTimer <= 1) {
+            handleLogout();
+            return 0;
+          }
+          return prevTimer - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(interval);
+    }
+  }, [isLoggedIn]);
+
+  const handleLogin = () => {
     setIsLoggedIn(true);
+    setTimer(600);
   };
 
   const handleLogout = () => {
@@ -77,6 +90,12 @@ const AppContent = () => {
     return <div>Loading...</div>;
   }
 
+  const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${minutes}:${secs < 10 ? "0" : ""}${secs}`;
+  };
+
   return (
     <>
       {isLoggedIn ? (
@@ -91,16 +110,22 @@ const AppContent = () => {
               <Login isLoggedIn={isLoggedIn} handleLogin={handleLogin} />
             }
           />
-          <Route path="/" element={<Home sessionId={sessionId} />} />
-          <Route
-            path="/transactionHistory"
-            element={<TransactionHistory sessionId={sessionId} />}
-          />
-          <Route
-            path="/transfer"
-            element={<Transfer sessionId={sessionId} />}
-          />
+          <Route path="/" element={<Home />} />
+          <Route path="/transactionHistory" element={<TransactionHistory />} />
+          <Route path="/transfer" element={<Transfer />} />
         </Routes>
+        {isLoggedIn && (
+          <div
+            style={{
+              position: "absolute",
+              top: "9px",
+              right: "100px",
+              color: "#0d6efd",
+            }}
+          >
+            Холболт салах: {formatTime(timer)}
+          </div>
+        )}
       </div>
     </>
   );
