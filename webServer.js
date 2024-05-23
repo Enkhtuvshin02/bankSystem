@@ -80,7 +80,7 @@ app.get("/", (req, res) => {
 app.get("/isLoggedIn", async (req, res) => {
   const sessionCookie = req.cookies.session;
   if (!sessionCookie || !sessionCookie.isLoggedIn) {
-    res.json({ isLoggedIn: false, sessionId });
+    res.json({ isLoggedIn: false });
   } else {
     res.json({
       isLoggedIn: sessionCookie.isLoggedIn,
