@@ -118,7 +118,7 @@ app.post("/auth/login", async (req, res) => {
     req.session.username = `${user.firstName} ${user.lastName}`;
 
     res.cookie("session", req.session);
-   
+   res.status(200).json({ message: "success",sessionId:req.sessionID });
   } catch (err) {
     console.error("Error logging in:", err);
     res.status(500).json({ message: "Failed to log in" });
