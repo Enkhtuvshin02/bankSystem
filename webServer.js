@@ -11,7 +11,7 @@ import crypto from "crypto";
 import MongoStore from "connect-mongo";
 import path from "path";
 import { fileURLToPath } from "url";
-
+import cookieParser from "cookie-parser";
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -39,7 +39,7 @@ app.use(
 
 app.use(express.static(__dirname));
 app.use(express.json());
-
+app.use(cookieParser());
 mongoose.set("strictQuery", false);
 mongoose
   .connect(process.env.DB_URI, { dbName: "bankSystem" })
@@ -116,11 +116,9 @@ app.post("/auth/login", async (req, res) => {
     req.session.isLoggedIn = true;
     req.session.userId = user._id;
     req.session.username = `${user.firstName} ${user.lastName}`;
-
-    res.status(200).json({
-      message: "success",
-      sessionId: req.sessionID,
-    });
+ const serializedSession = JSON.stringify(req.session);
+    res.cookie("session", serializedSession);
+   
   } catch (err) {
     console.error("Error logging in:", err);
     res.status(500).json({ message: "Failed to log in" });
@@ -182,6 +180,7 @@ app.get("/user/list", (req, res) => {
 });
 
 app.get("/transactionHistory", async (req, res) => {
+  const sessionCookie = req.cookies.session;
   const sessionId = req.headers.sessionid;
   let sessionData = req.session;
 
@@ -191,7 +190,7 @@ app.get("/transactionHistory", async (req, res) => {
 
   const userId = sessionData?.userId;
   if (!userId) {
-    return res.status(401).json({ error: "Unauthorized", sessionId,sessionData });
+    return res.status(401).json({ error: "Unauthorized", sessionId,sessionData,sessionCookie });
   }
 
   try {
@@ -347,6 +346,7 @@ app.get("/getBanks", async (req, res) => {
 });
 
 app.get("/getPersonalAccounts", async (req, res) => {
+  const sessionCookie = req.cookies.session;
   const sessionId = req.headers.sessionid;
   let sessionData = req.session;
 
@@ -356,7 +356,7 @@ app.get("/getPersonalAccounts", async (req, res) => {
 
   const userId = sessionData?.userId;
   if (!userId) {
-    return res.status(401).json({ error: "Unauthorized",sessionId,sessionData });
+    return res.status(401).json({ error: "Unauthorized",sessionId,sessionData,sessionCookie });
   }
 
   try {
