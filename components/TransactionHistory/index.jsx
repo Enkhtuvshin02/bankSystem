@@ -46,15 +46,18 @@ const TransactionHistory = ({sessionId}) => {
     setEndDate(null);
   };
 
-  const filteredTransactions = transactions.filter((transaction) => {
-    const matchesSearchQuery = transaction.description
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
-    const matchesDateRange =
-      (!startDate || new Date(transaction.transactionDate) >= startDate) &&
-      (!endDate || new Date(transaction.transactionDate) <= endDate);
-    return matchesSearchQuery && matchesDateRange;
-  });
+  const filteredTransactions = Array.isArray(transactions)
+  ? transactions.filter((transaction) => {
+      const matchesSearchQuery = transaction.description
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+      const matchesDateRange =
+        (!startDate || new Date(transaction.transactionDate) >= startDate) &&
+        (!endDate || new Date(transaction.transactionDate) <= endDate);
+      return matchesSearchQuery && matchesDateRange;
+    })
+  : [];
+
 
   return (
     <div className="historyContainer">
