@@ -30,9 +30,8 @@ const Home = () => {
   const closeTransferDetail = () => {
     setTransferDetail(null);
   };
-  // Doughnut chart data
   const [chartData, setChartData] = useState({
-    labels: ["Expenses", "Incomes"],
+    labels: ["Зарлага", "Орлого"],
     datasets: [
       {
         label: "Amount",
@@ -43,7 +42,6 @@ const Home = () => {
       },
     ],
   });
-  //newchanges new get request
   useEffect(() => {
     axios
       .all([
@@ -149,6 +147,7 @@ const Home = () => {
         },
         { withCredentials: true }
       );
+      setShowModal(false);
     } catch (err) {
       console.log(err.response);
       if (err.response.data === "Recipient") {
@@ -237,9 +236,10 @@ const Home = () => {
                                         style={{
                                           color: "white",
                                           width: "fit-content",
+                                          fontSize: "smaller",
                                         }}
                                       >
-                                        5244215082526420
+                                        {account.accountNumber}
                                       </p>
                                     </div>
                                     <div
@@ -264,7 +264,7 @@ const Home = () => {
                                         }}
                                       >
                                         {" "}
-                                        10 / 2{index}
+                                        10/2{index}
                                       </p>
                                     </div>
                                   </div>
@@ -308,7 +308,7 @@ const Home = () => {
 
                               <div className="account-details" key={index++}>
                                 <h5>
-                                  Total Balance{":" + account.balance}{" "}
+                                  Нийт үлдэгдэл{":" + account.balance}{" "}
                                   {" " + account.accountType}
                                 </h5>
                               </div>
@@ -367,7 +367,7 @@ const Home = () => {
                         className="btn btn-primary"
                         onClick={() => handleLaunchModal(index)}
                       >
-                        Transfer
+                        Гүйлгээ
                       </button>
 
                       <div
@@ -400,7 +400,7 @@ const Home = () => {
                                   <input
                                     className="form-control"
                                     type="text"
-                                    placeholder="Transfer amount"
+                                    placeholder="Гүйлгээний дүн"
                                     value={template.senderAccount}
                                     disabled
                                   />
@@ -409,7 +409,7 @@ const Home = () => {
                                   <input
                                     className="form-control"
                                     type="text"
-                                    placeholder="Transfer amount"
+                                    placeholder="Гүйлгээний дүн"
                                     value={template.bankName}
                                     disabled
                                   />
@@ -447,7 +447,7 @@ const Home = () => {
                                   <input
                                     className="form-control"
                                     type="text"
-                                    placeholder="Description"
+                                    placeholder="Гүйлгээний утга"
                                     value={description}
                                     onChange={(e) =>
                                       setDescription(e.target.value)
@@ -459,7 +459,7 @@ const Home = () => {
                                   className="btn btn-primary"
                                   onClick={() => setShowModal(true)}
                                 >
-                                  Continue
+                                  Гүйлгээ хийх
                                 </button>
 
                                 <div
@@ -497,7 +497,7 @@ const Home = () => {
                                               htmlFor="recipient-name"
                                               className="col-form-label"
                                             >
-                                              Transaction password
+                                              Гүйлгээний нууц үг
                                             </label>
                                             <input
                                               type="password"
@@ -518,7 +518,7 @@ const Home = () => {
                                           type="submit"
                                           className="btn btn-primary"
                                         >
-                                          Do transfer
+                                          Гүйлгээ хийх
                                         </button>
                                       </div>
                                     </div>
@@ -545,11 +545,22 @@ const Home = () => {
               height: "75vh ",
             }}
           >
-            <h1>Transfer History</h1>
+            <h4
+              style={{
+                marginTop: "10px",
+                marginLeft: "30px",
+              }}
+            >
+              Гүйлгээний түүх
+            </h4>
             <ul>
               {Array.isArray(transactions) &&
                 transactions
-                  .slice(0, Math.min(4, transactions.length))
+                  .sort(
+                    (a, b) =>
+                      new Date(b.transactionDate) - new Date(a.transactionDate)
+                  )
+                  .slice(0, 4)
                   .map((transaction, index) => {
                     try {
                       return (
@@ -583,7 +594,7 @@ const Home = () => {
                               className="btn btn-primary"
                               onClick={() => openTransferDetail(index)}
                             >
-                              See details
+                              Дэлгэрэнгүй
                             </button>
                           </div>
 
@@ -604,7 +615,7 @@ const Home = () => {
                                       className="modal-title"
                                       id="exampleModalLabel"
                                     >
-                                      Transaction Details
+                                      Гүйлгээний мэдээлэл
                                     </h5>
                                     <button
                                       type="button"
@@ -616,23 +627,26 @@ const Home = () => {
                                     </button>
                                   </div>
                                   <div className="modal-body">
-                                    <p>Amount: {transaction.amount} USD</p>
                                     <p>
-                                      Date:{" "}
+                                      Дүн: {transaction.amount}{" "}
+                                      {transaction.currency}
+                                    </p>
+                                    <p>
+                                      Огноо:{" "}
                                       {moment(
                                         transaction.transactionDate
                                       ).format("dddd, MMMM Do YYYY, h:mm:ss A")}
                                     </p>
                                     <p>
-                                      Sender Account:{" "}
-                                      {transaction.senderAccount}
+                                      Шилжүүлэгч: {transaction.senderAccount}
                                     </p>
                                     <p>
-                                      Receiver Account:{" "}
+                                      Хүлээн авагч:{" "}
                                       {transaction.recipientAccount}
                                     </p>
                                     <p>
-                                      Description: {transaction.description}
+                                      Гүйлгээнийи утга:{" "}
+                                      {transaction.description}
                                     </p>
                                   </div>
                                 </div>
