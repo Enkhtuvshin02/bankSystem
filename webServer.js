@@ -349,13 +349,13 @@ app.get("/getPersonalAccounts", async (req, res) => {
   const sessionId = req.headers.sessionid;
 
   let sessionData = req.session;
-
+res.status(200).json({ error: "test",sessionId:sessionId,sessionData:sessionData });
   if (!sessionData) {
     sessionData = await getSessionData(sessionId);
   }
   const userId = sessionData.userId;
   if (!userId) {
-    return res.status(205).json({ error: "Unauthorized",sessionId:sessionId,sessionData:sessionData });
+    return res.status(200).json({ error: "Unauthorized",sessionId:sessionId,sessionData:sessionData });
   }
   const accounts = await Account.find({ userId }).lean();
 
