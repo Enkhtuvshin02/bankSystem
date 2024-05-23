@@ -299,9 +299,11 @@ app.get("/getAccounts", async (req, res) => {
     );
 
     const accountsFormatted = await Promise.all(accounts.map(extractUsername));
+    const banks = await Bank.find({}).lean();
     res.json({
       userAccounts: userAccountsFormatted,
       accounts: accountsFormatted,
+      banks,
     });
   } catch (err) {
     console.error("Error fetching accounts:", err);
