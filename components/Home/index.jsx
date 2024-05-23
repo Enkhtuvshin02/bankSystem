@@ -30,6 +30,7 @@ const BentoUI = () => {
   });
 
   useEffect(() => {
+    
     axios
       .all([
         axios.get(`/transactionHistory`, {
@@ -41,6 +42,7 @@ const BentoUI = () => {
       ])
       .then((res) => {
         const [res1, res2] = res;
+        console.log(res1.data, res2.data)
         setTransactions(res1.data);
         setAccounts(res2.data);
         updateChartData(res1.data);
