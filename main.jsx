@@ -28,7 +28,7 @@ const AppContent = () => {
       .get(`/isLoggedIn`, { withCredentials: true })
       .then(
         (res) => {
-          console.log(res.data.username);
+          console.log("changed "+res.data.accounts);
           setIsLoggedIn(res.data.isLoggedIn);
           setloggedUsersName(res.data.username);
           setLoading(false);
