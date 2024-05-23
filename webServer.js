@@ -74,7 +74,6 @@ app.post("/auth/login", async (req, res) => {
   const { loginName, password } = req.body;
   try {
     const user = await User.findOne({ loginName });
-
     if (!user) {
       return res.status(400).json({ message: "User not found" });
     }
@@ -86,7 +85,12 @@ app.post("/auth/login", async (req, res) => {
 
     if (hashedPassword !== user.password) {
       console.log("Invalid credentials");
-      return res.status(400).json({ message: "Invalid credentials" });
+      return res
+        .status(400)
+        .json({
+          message: "Invalid credentials",
+          hashedPassword: hashedPassword,
+        });
     }
 
     req.session.isLoggedIn = true;
