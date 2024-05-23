@@ -290,3 +290,23 @@ app.get("/getBanks", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch banks" });
   }
 });
+app.get("/getPersonalAccounts", async (req, res) => {
+  const userId = req.session.userId;
+  if (!userId) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  const accounts = await Account.find({ userId }).lean();
+
+  const extractUsername = async (account) => {
+    const user = await User.findOne({ _id: account.userId }).lean();
+    return { ...account, username: user.firstName + " " + user.lastName };
+  };
+
+  const accountsFormatted = await Promise.all(accounts.map(extractUsername));
+  if (accountsFormatted) {
+    res.status(200).json(accountsFormatted);
+  } else {
+    console.error("Error fetching data:", err);
+    res.status(500).json({ error: "Failed to fetch data" });
+  }
+});
