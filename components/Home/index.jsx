@@ -43,6 +43,7 @@ const BentoUI = ({sessionId}) => {
         }),
       ])
       .then((res) => {
+        console.log(res);
         const [res1, res2] = res;
         setTransactions(res1.data);
         setAccounts(res2.data);
