@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import "./styles.css"; // Make sure to import the CSS file
+import "./styles.css"; 
 import { FaHome } from "react-icons/fa";
 import { IoFilterSharp } from "react-icons/io5";
 import { FaMoneyBillTransfer } from "react-icons/fa6";
@@ -23,7 +23,7 @@ function SideNav() {
         aria-selected={location.pathname === "/"}
       >
         <FaHome />
-        <span className="nav-text">Home</span>
+        <span className="nav-text">Эхлэл</span>
       </Link>
       <Link
         className={`nav-link ${
@@ -36,7 +36,7 @@ function SideNav() {
         aria-selected={location.pathname === "/transactionHistory"}
       >
         <IoFilterSharp />
-        <span className="nav-text">Transaction History</span>
+        <span className="nav-text">Гүйлгээний түүх</span>
       </Link>
       <Link
         className={`nav-link ${
@@ -49,7 +49,7 @@ function SideNav() {
         aria-selected={location.pathname === "/transfer"}
       >
         <FaMoneyBillTransfer />
-        <span className="nav-text">Transfer</span>
+        <span className="nav-text">Гүйлгээ</span>
       </Link>
     </div>
   );
