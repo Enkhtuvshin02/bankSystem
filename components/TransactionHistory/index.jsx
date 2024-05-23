@@ -4,12 +4,8 @@ import React, { useState, useEffect } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "./styles.css";
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
-import { Doughnut } from "react-chartjs-2";
 
-ChartJS.register(ArcElement, Tooltip, Legend);
-
-const TransactionHistory = ({sessionId}) => {
+const TransactionHistory = () => {
   const [transactions, setTransactions] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [startDate, setStartDate] = useState(null);
@@ -19,7 +15,6 @@ const TransactionHistory = ({sessionId}) => {
     axios
       .get(`/transactionHistory`, {
         withCredentials: true,
-        headers: { sessionId: sessionId },
       })
       .then((res) => {
         setTransactions(res.data);
@@ -46,22 +41,19 @@ const TransactionHistory = ({sessionId}) => {
     setEndDate(null);
   };
 
-  const filteredTransactions = Array.isArray(transactions)
-  ? transactions.filter((transaction) => {
-      const matchesSearchQuery = transaction.description
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-      const matchesDateRange =
-        (!startDate || new Date(transaction.transactionDate) >= startDate) &&
-        (!endDate || new Date(transaction.transactionDate) <= endDate);
-      return matchesSearchQuery && matchesDateRange;
-    })
-  : [];
-
+  const filteredTransactions = transactions.filter((transaction) => {
+    const matchesSearchQuery = transaction.description
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+    const matchesDateRange =
+      (!startDate || new Date(transaction.transactionDate) >= startDate) &&
+      (!endDate || new Date(transaction.transactionDate) <= endDate);
+    return matchesSearchQuery && matchesDateRange;
+  });
 
   return (
     <div className="historyContainer">
-      <h1>Transfer History</h1>
+      <h1>Гүйлгээний түүх</h1>
       <div
         className="search-bar"
         style={{
@@ -71,7 +63,7 @@ const TransactionHistory = ({sessionId}) => {
         <input
           type="text"
           className="form-control"
-          placeholder="Search transactions"
+          placeholder="Гүйлгээний утгаар хайх"
           value={searchQuery}
           onChange={handleSearch}
         />
@@ -83,7 +75,7 @@ const TransactionHistory = ({sessionId}) => {
           selectsStart
           startDate={startDate}
           endDate={endDate}
-          placeholderText="Start Date"
+          placeholderText="Эхлэл"
           className="form-control"
         />
         <DatePicker
@@ -92,7 +84,7 @@ const TransactionHistory = ({sessionId}) => {
           selectsEnd
           startDate={startDate}
           endDate={endDate}
-          placeholderText="End Date"
+          placeholderText="Төгсгөл"
           className="form-control"
         />
         <button
@@ -100,13 +92,13 @@ const TransactionHistory = ({sessionId}) => {
           className="btn btn-secondary"
           onClick={clearDates}
         >
-          Clear Dates
+          Clear
         </button>
       </div>
       <div className="row transactionContainer">
-        <div className="col-3">date</div>
-        <div className="col-3">description</div>
-        <div className="col-1">Amount</div>
+        <div className="col-3">Огноо</div>
+        <div className="col-3">Гүйлгээний утга</div>
+        <div className="col-1">Дүн</div>
         <div className="col-2"></div>
       </div>
       <div
@@ -138,7 +130,7 @@ const TransactionHistory = ({sessionId}) => {
                 data-toggle="modal"
                 data-target={`#exampleModal${index}`}
               >
-                See details
+                Дэлгэрэнгүй
               </button>
             </div>
             <div
@@ -153,7 +145,7 @@ const TransactionHistory = ({sessionId}) => {
                 <div className="modal-content">
                   <div className="modal-header">
                     <h5 className="modal-title" id="exampleModalLabel">
-                      Transaction Details
+                      Гүйлгээний мэдээлэл
                     </h5>
                     <button
                       type="button"
@@ -166,18 +158,18 @@ const TransactionHistory = ({sessionId}) => {
                   </div>
                   <div className="modal-body">
                     <p>
-                      Amount: {transaction.amount},{transaction.currency}
+                      Дүн: {transaction.amount},{transaction.currency}
                     </p>
-                    <p>Type: {transaction.type}</p>
+                    <p>Төрөл: {transaction.type}</p>
                     <p>
-                      Date:{" "}
+                      Огноо:{" "}
                       {moment(transaction.transactionDate).format(
                         "dddd, MMMM Do YYYY, h:mm:ss A"
                       )}
                     </p>
-                    <p>Sender Account: {transaction.senderAccount}</p>
-                    <p>Receiver Account: {transaction.recipientAccount}</p>
-                    <p>Description: {transaction.description}</p>
+                    <p>Шилжүүлэгч: {transaction.senderAccount}</p>
+                    <p>Хүлээн авагч: {transaction.recipientAccount}</p>
+                    <p>Гүйлгээний утга: {transaction.description}</p>
                   </div>
                 </div>
               </div>
