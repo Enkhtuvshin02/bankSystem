@@ -8,23 +8,26 @@ const Login = ({ isLoggedIn, handleLogin }) => {
   const navigate = useNavigate();
 
   const Login = async (e) => {
-    e.preventDefault();
-    try {
-      const { data } = await axios.post(
-        `/auth/login`,
-        {
-          loginName,
-          password,
-        },
-        { withCredentials: true }
-      );
-      handleLogin(data);
-      navigate("/");
-    } catch (err) {
-      console.error(err);
-      alert("Invalid credentials");
-    }
-  };
+  e.preventDefault();
+  try {
+    const { data } = await axios.post(
+      `/auth/login`,
+      {
+        loginName,
+        password,
+      },
+      { withCredentials: true }
+    );
+    
+    console.log("Response Data:", data); // Log the success response
+    handleLogin(data);
+    navigate("/");
+  } catch (err) {
+    console.error("Error Response:", err.response.data); // Log the error response
+    alert("Invalid credentials");
+  }
+};
+
 
   return (
     <>
