@@ -79,7 +79,7 @@ app.get("/", (req, res) => {
 });
 
 app.get("/isLoggedIn", async (req, res) => {
-  const sessionId = req.sessionID;
+  const sessionId = req.headers.sessionid || req.sessionID;
   let sessionData = req.session;
 
   if (!sessionData) {
@@ -119,13 +119,10 @@ app.post("/auth/login", async (req, res) => {
     req.session.userId = user._id;
     req.session.username = `${user.firstName} ${user.lastName}`;
 
-    res
-      .status(200)
-      .json({
-        message: "success",
-        sessionId: req.sessionID,
-        sessionData: req.session,
-      });
+    res.status(200).json({
+      message: "success",
+      sessionId: req.sessionID,
+    });
   } catch (err) {
     console.error("Error logging in:", err);
     res.status(500).json({ message: "Failed to log in" });
@@ -189,7 +186,7 @@ app.get("/user/list", (req, res) => {
 });
 
 app.get("/transactionHistory", async (req, res) => {
-  const sessionId = req.sessionID;
+  const sessionId = req.headers.sessionid || req.sessionID;
   let sessionData = req.session;
 
   if (!sessionData) {
@@ -222,6 +219,13 @@ app.get("/transactionHistory", async (req, res) => {
 });
 
 app.post("/transfer", async (req, res) => {
+  const sessionId = req.headers.sessionid || req.sessionID;
+  let sessionData = req.session;
+  let senderUserId;
+  if (!sessionData) {
+    sessionData = await getSessionData(sessionId);
+    senderUserId = sessionData.userId;
+  }
   try {
     console.log(req.body);
     const {
@@ -235,7 +239,6 @@ app.post("/transfer", async (req, res) => {
       receiverUserId,
       transactionPassword,
     } = req.body;
-    const senderUserId = req.session.userId;
 
     const transferAmount = parseFloat(amount);
 
@@ -287,7 +290,8 @@ app.post("/transfer", async (req, res) => {
 });
 
 app.get("/getAccounts", async (req, res) => {
-  const sessionId = req.sessionID;
+  const sessionId = req.headers.sessionid || req.sessionID;
+
   let sessionData = req.session;
 
   if (!sessionData) {
@@ -342,7 +346,8 @@ app.get("/getBanks", async (req, res) => {
 });
 
 app.get("/getPersonalAccounts", async (req, res) => {
-  const sessionId = req.sessionID;
+  const sessionId = req.headers.sessionid || req.sessionID;
+
   let sessionData = req.session;
 
   if (!sessionData) {
