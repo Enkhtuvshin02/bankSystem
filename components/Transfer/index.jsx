@@ -77,7 +77,7 @@ const Transfer = (sessionId) => {
           receiverUserId: recipientUserId,
           transactionPassword: hashedTransactionPassword,
         },
-        { withCredentials: true }
+        { withCredentials: true,headers: { sessionId: sessionId }, }
       );
       if (data) {
         navigate("/");
