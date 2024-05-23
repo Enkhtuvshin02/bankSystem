@@ -183,5 +183,9 @@
 .chart-container {
   height: 50%;
 }
-
+.templateContainer {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
 /*900px responsive*/
