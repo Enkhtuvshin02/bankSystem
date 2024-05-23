@@ -32,7 +32,7 @@ const AppContent = () => {
       })
       .then(
         (res) => {
-          console.log(res.data.username);
+          console.log("main res.data "+res.data);
           setIsLoggedIn(res.data.isLoggedIn);
           setloggedUsersName(res.data.username);
           setLoading(false);
