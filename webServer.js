@@ -79,7 +79,7 @@ app.get("/", (req, res) => {
 });
 
 app.get("/isLoggedIn", async (req, res) => {
-  const sessionId = req.headers.sessionId || req.sessionID;
+  const sessionId = req.headers.sessionid;
   let sessionData = req.session;
 
   if (!sessionData) {
@@ -88,7 +88,7 @@ app.get("/isLoggedIn", async (req, res) => {
 
   const accounts = await Account.find({}).lean();
   if (!sessionData || !sessionData.isLoggedIn) {
-    res.json({ isLoggedIn: false, accounts });
+    res.json({ isLoggedIn: false, sessionId:req.headers.sessionid });
   } else {
     res.json({
       isLoggedIn: sessionData.isLoggedIn,
@@ -186,7 +186,7 @@ app.get("/user/list", (req, res) => {
 });
 
 app.get("/transactionHistory", async (req, res) => {
-  const sessionId = req.headers.sessionId ;
+  const sessionId = req.headers.sessionid ;
   let sessionData = req.session;
 
   if (!sessionData) {
@@ -195,7 +195,7 @@ app.get("/transactionHistory", async (req, res) => {
 
   const userId = sessionData.userId;
   if (!userId) {
-    return res.json({ error: "Unauthorized",sessionId:sessionId,sessionData:sessionData });
+    return res.status(205).json({ error: "Unauthorized",sessionId:sessionId,sessionData:sessionData });
   }
 
   try {
@@ -219,7 +219,7 @@ app.get("/transactionHistory", async (req, res) => {
 });
 
 app.post("/transfer", async (req, res) => {
-  const sessionId = req.headers.sessionId || req.sessionID;
+  const sessionId = req.headers.sessionid;
   let sessionData = req.session;
   let senderUserId;
   if (!sessionData) {
@@ -290,7 +290,7 @@ app.post("/transfer", async (req, res) => {
 });
 
 app.get("/getAccounts", async (req, res) => {
-  const sessionId = req.headers.sessionId || req.sessionID;
+  const sessionId = req.headers.sessionid;
 
   let sessionData = req.session;
 
@@ -299,7 +299,7 @@ app.get("/getAccounts", async (req, res) => {
   }
   const userId = sessionData.userId;
   if (!userId) {
-    return res.status(401).json({ error: "Unauthorized" });
+    return res.status(205).json({ error: "Unauthorized",sessionId:sessionId });
   }
 
   try {
@@ -346,7 +346,7 @@ app.get("/getBanks", async (req, res) => {
 });
 
 app.get("/getPersonalAccounts", async (req, res) => {
-  const sessionId = req.headers.sessionId;
+  const sessionId = req.headers.sessionid;
 
   let sessionData = req.session;
 
@@ -355,7 +355,7 @@ app.get("/getPersonalAccounts", async (req, res) => {
   }
   const userId = sessionData.userId;
   if (!userId) {
-    return res.json({ error: "Unauthorized",sessionId:sessionId,sessionData:sessionData });
+    return res.status(205).json({ error: "Unauthorized",sessionId:sessionId,sessionData:sessionData });
   }
   const accounts = await Account.find({ userId }).lean();
 
