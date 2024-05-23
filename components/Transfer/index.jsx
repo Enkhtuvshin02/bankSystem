@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { Card } from "react-bootstrap";
 import crypto from "crypto-browserify";
 
-const Transfer = (sessionId) => {
+const Transfer = ({sessionId}) => {
   const navigate = useNavigate();
   const [userAccounts, setUserAccounts] = useState([]);
   const [accounts, setAccounts] = useState([]);
