@@ -86,9 +86,8 @@ app.get("/isLoggedIn", async (req, res) => {
     sessionData = await getSessionData(sessionId);
   }
 
-  const accounts = await Account.find({}).lean();
   if (!sessionData || !sessionData.isLoggedIn) {
-    res.json({ isLoggedIn: false, sessionId:req.headers.sessionid });
+    res.json({ isLoggedIn: false, sessionId });
   } else {
     res.json({
       isLoggedIn: sessionData.isLoggedIn,
@@ -111,7 +110,6 @@ app.post("/auth/login", async (req, res) => {
       .digest("hex");
 
     if (hashedPassword !== user.password) {
-      console.log("Invalid credentials");
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
@@ -130,13 +128,11 @@ app.post("/auth/login", async (req, res) => {
 });
 
 app.post("/auth/logout", (req, res) => {
-  console.log("Before destroy:", req.session);
   req.session.destroy((err) => {
     if (err) {
       console.error("Error destroying session:", err);
       return res.status(500).json({ message: "Failed to log out" });
     } else {
-      console.log("After destroy:", req.session);
       res.clearCookie("connect.sid");
       return res.status(200).json({ message: "Logged out successfully" });
     }
@@ -186,16 +182,16 @@ app.get("/user/list", (req, res) => {
 });
 
 app.get("/transactionHistory", async (req, res) => {
-  const sessionId = req.headers.sessionid ;
+  const sessionId = req.headers.sessionid;
   let sessionData = req.session;
 
   if (!sessionData) {
     sessionData = await getSessionData(sessionId);
   }
 
-  const userId = sessionData.userId;
+  const userId = sessionData?.userId;
   if (!userId) {
-    return res.status(205).json({ error: "Unauthorized",sessionId:sessionId,sessionData:sessionData });
+    return res.status(401).json({ error: "Unauthorized", sessionId });
   }
 
   try {
@@ -221,13 +217,18 @@ app.get("/transactionHistory", async (req, res) => {
 app.post("/transfer", async (req, res) => {
   const sessionId = req.headers.sessionid;
   let sessionData = req.session;
-  let senderUserId;
+
   if (!sessionData) {
     sessionData = await getSessionData(sessionId);
-    senderUserId = sessionData.userId;
   }
+
+  const senderUserId = sessionData?.userId;
+
+  if (!senderUserId) {
+    return res.status(401).json({ error: "Unauthorized",sessionId });
+  }
+
   try {
-    console.log(req.body);
     const {
       senderAccount,
       recipientName,
@@ -244,20 +245,19 @@ app.post("/transfer", async (req, res) => {
 
     const user = await User.findOne({ _id: senderUserId });
     if (transactionPassword !== user.transactionPassword) {
-      console.log("Transaction password didn't match");
-      return res.status(404).json("Transaction password didn't match");
+      return res.status(400).json("Transaction password didn't match");
     }
+
     const receiver = await Account.findOne({
       bankId: recipientBank,
       accountNumber: recipientAccount,
     });
     if (!receiver) {
-      console.log("Recipient account not found");
       return res.status(404).json("Recipient account not found");
     }
+
     const sender = await Account.findOne({ accountNumber: senderAccount });
     if (sender.balance < transferAmount) {
-      console.log("Insufficient funds");
       return res.status(400).json("Insufficient funds");
     }
 
@@ -291,21 +291,22 @@ app.post("/transfer", async (req, res) => {
 
 app.get("/getAccounts", async (req, res) => {
   const sessionId = req.headers.sessionid;
-
   let sessionData = req.session;
 
   if (!sessionData) {
     sessionData = await getSessionData(sessionId);
   }
-  const userId = sessionData.userId;
+
+  const userId = sessionData?.userId;
   if (!userId) {
-    return res.status(205).json({ error: "Unauthorized",sessionId:sessionId });
+    return res.status(401).json({ error: "Unauthorized",sessionId });
   }
 
   try {
     const userAccounts = await Account.find({ userId }).lean();
 
     const accounts = await Account.find({}).lean();
+
     const extractTransactionPassword = async (account) => {
       const user = await User.findOne({ _id: account.userId }).lean();
       return {
@@ -347,28 +348,30 @@ app.get("/getBanks", async (req, res) => {
 
 app.get("/getPersonalAccounts", async (req, res) => {
   const sessionId = req.headers.sessionid;
-
   let sessionData = req.session;
-res.status(200).json({ error: "test",sessionId:sessionId,sessionData:sessionData });
+
   if (!sessionData) {
     sessionData = await getSessionData(sessionId);
   }
-  const userId = sessionData.userId;
+
+  const userId = sessionData?.userId;
   if (!userId) {
-    return res.status(200).json({ error: "Unauthorized",sessionId:sessionId,sessionData:sessionData });
+    return res.status(401).json({ error: "Unauthorized",sessionId });
   }
-  const accounts = await Account.find({ userId }).lean();
 
-  const extractUsername = async (account) => {
-    const user = await User.findOne({ _id: account.userId }).lean();
-    return { ...account, username: user.firstName + " " + user.lastName };
-  };
+  try {
+    const accounts = await Account.find({ userId }).lean();
 
-  const accountsFormatted = await Promise.all(accounts.map(extractUsername));
-  if (accountsFormatted) {
+    const extractUsername = async (account) => {
+      const user = await User.findOne({ _id: account.userId }).lean();
+      return { ...account, username: user.firstName + " " + user.lastName };
+    };
+
+    const accountsFormatted = await Promise.all(accounts.map(extractUsername));
+
     res.status(200).json(accountsFormatted);
-  } else {
-    console.error("Error fetching data:", err);
-    res.status(500).json({ error: "Failed to fetch data" });
+  } catch (err) {
+    console.error("Error fetching personal accounts:", err);
+    res.status(500).json({ error: "Failed to fetch personal accounts" });
   }
 });
