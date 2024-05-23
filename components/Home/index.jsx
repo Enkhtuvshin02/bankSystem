@@ -2,19 +2,34 @@ import { Container, Row, Col, Card } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./styles.css";
 import axios from "axios";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import moment from "moment";
-
+import crypto from "crypto-browserify";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import { Doughnut } from "react-chartjs-2";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
-const BentoUI = ({sessionId}) => {
+const Home = () => {
+  const modalRefs = useRef([]);
   const [transactions, setTransactions] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const [accountIndex, setAccountIndex] = useState(0);
   const [error, setError] = useState(null);
+  const [templates, setTemplates] = useState([]);
+  const [showTransfer, setShowTransfer] = useState([]);
+  const [transferAmount, setTransferAmount] = useState("");
+  const [description, setDescription] = useState("");
+  const [showModal, setShowModal] = useState(false);
+  const [transactionPassword, setTransactionPassword] = useState("");
+  const [transferDetail, setTransferDetail] = useState(null);
 
+  const openTransferDetail = (index) => {
+    setTransferDetail(index);
+  };
+
+  const closeTransferDetail = () => {
+    setTransferDetail(null);
+  };
   // Doughnut chart data
   const [chartData, setChartData] = useState({
     labels: ["Expenses", "Incomes"],
@@ -28,26 +43,26 @@ const BentoUI = ({sessionId}) => {
       },
     ],
   });
-
+  //newchanges new get request
   useEffect(() => {
-    console.log("session id in home before send req "+sessionId)
     axios
       .all([
         axios.get(`/transactionHistory`, {
-          headers: { sessionId: sessionId },
           withCredentials: true,
         }),
         axios.get(`/getPersonalAccounts`, {
-          headers: { sessionId: sessionId },
+          withCredentials: true,
+        }),
+        axios.get(`/getTemplates`, {
           withCredentials: true,
         }),
       ])
       .then((res) => {
-        console.log(res);
-        const [res1, res2] = res;
+        const [res1, res2, res3] = res;
         setTransactions(res1.data);
         setAccounts(res2.data);
         updateChartData(res1.data);
+        setTemplates(res3.data);
       })
       .catch((err) => {
         console.error(err);
@@ -101,7 +116,52 @@ const BentoUI = ({sessionId}) => {
         break;
     }
   };
+  const handleLaunchModal = (index) => {
+    const modalElement = modalRefs.current[index];
+    const modal = new window.bootstrap.Modal(modalElement);
+    modal.show();
+  };
+  const handleFormSubmit = async (e, index) => {
+    e.preventDefault();
+    const hashedTransactionPassword = await crypto
+      .createHash("sha256")
+      .update(transactionPassword + accounts[0].salt)
+      .digest("hex");
 
+    if (hashedTransactionPassword !== accounts[0].transactionPassword) {
+      alert("Transaction password did not match");
+      return;
+    }
+
+    try {
+      const data = await axios.post(
+        `/transfer`,
+        {
+          senderAccount: templates[index].senderAccount,
+          recipientName: templates[index].recipientName,
+          recipientBank: templates[index].recipientBank,
+          recipientAccount: templates[index].recipientAccount,
+          description: description,
+          amount: transferAmount,
+          currency: templates[index].currency,
+          receiverUserId: templates[index].receiverUserId,
+          transactionPassword: hashedTransactionPassword,
+        },
+        { withCredentials: true }
+      );
+    } catch (err) {
+      console.log(err.response);
+      if (err.response.data === "Recipient") {
+        alert("Check account number or bank");
+      } else if (err.response.data === "Balance") {
+        alert("Balance not enough");
+      } else if (err.response.data === "Transaction password") {
+        alert("Balance not enough");
+      } else {
+        alert("Transfer failed");
+      }
+    }
+  };
   return (
     <Container fluid className="p-3">
       <Row className="bentoRow">
@@ -117,7 +177,7 @@ const BentoUI = ({sessionId}) => {
                           return (
                             <>
                               <div
-                                key={index}
+                                key={index + 1}
                                 style={{
                                   width: "80%",
                                   display: "flex",
@@ -137,7 +197,7 @@ const BentoUI = ({sessionId}) => {
                                 </div>
                               </div>
                               <Col
-                                key={index}
+                                key={index--}
                                 xs={12}
                                 sm={8}
                                 md={10}
@@ -246,7 +306,7 @@ const BentoUI = ({sessionId}) => {
                                 </div>
                               </Col>
 
-                              <div className="account-details" key={index}>
+                              <div className="account-details" key={index++}>
                                 <h5>
                                   Total Balance{":" + account.balance}{" "}
                                   {" " + account.accountType}
@@ -288,11 +348,189 @@ const BentoUI = ({sessionId}) => {
             </Col>
             <Col xs={12} md={12} lg={12} className="mb-3">
               <Card className="h-100">
-                <Card.Body>
-                  <Card.Title>Dream Laptop</Card.Title>
-                  <Card.Text>$116 / $1530</Card.Text>
-                  <Card.Text>15% Completed</Card.Text>
-                  <div className="progress-placeholder">Progress bar here</div>
+                <Card.Body className="templateContainer">
+                  {templates.map((template, index) => (
+                    <div
+                      key={index}
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                      }}
+                    >
+                      <h5>{template.templateName}</h5>
+                      <p>
+                        {template.bankName + " "}
+                        {template.recipientName}
+                      </p>
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        onClick={() => handleLaunchModal(index)}
+                      >
+                        Transfer
+                      </button>
+
+                      <div
+                        className="modal fade"
+                        ref={(el) => (modalRefs.current[index] = el)}
+                        id={`exampleModal${index}`}
+                        tabIndex="-1"
+                        role="dialog"
+                        aria-labelledby={`exampleModalLabel${index}`}
+                        aria-hidden="true"
+                      >
+                        <div className="modal-dialog" role="document">
+                          <div className="modal-content">
+                            <div className="modal-header">
+                              <button
+                                type="button"
+                                className="close"
+                                data-dismiss="modal"
+                                aria-label="Close"
+                              >
+                                <span aria-hidden="true">&times;</span>
+                              </button>
+                            </div>
+                            <div className="modal-body">
+                              <form
+                                className="transferForm"
+                                onSubmit={(e) => handleFormSubmit(e, index)}
+                              >
+                                <div className="form-group">
+                                  <input
+                                    className="form-control"
+                                    type="text"
+                                    placeholder="Transfer amount"
+                                    value={template.senderAccount}
+                                    disabled
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <input
+                                    className="form-control"
+                                    type="text"
+                                    placeholder="Transfer amount"
+                                    value={template.bankName}
+                                    disabled
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <input
+                                    className="form-control"
+                                    type="text"
+                                    placeholder="Transfer amount"
+                                    value={transferAmount}
+                                    onChange={(e) =>
+                                      setTransferAmount(e.target.value)
+                                    }
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <input
+                                    className="form-control"
+                                    type="text"
+                                    placeholder="Recipient account"
+                                    value={template.recipientAccount}
+                                    disabled
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <input
+                                    className="form-control"
+                                    type="text"
+                                    placeholder="Recipient name"
+                                    value={template.recipientName}
+                                    disabled
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <input
+                                    className="form-control"
+                                    type="text"
+                                    placeholder="Description"
+                                    value={description}
+                                    onChange={(e) =>
+                                      setDescription(e.target.value)
+                                    }
+                                  />
+                                </div>
+                                <button
+                                  type="button"
+                                  className="btn btn-primary"
+                                  onClick={() => setShowModal(true)}
+                                >
+                                  Continue
+                                </button>
+
+                                <div
+                                  className={`modal fade ${
+                                    showModal ? "show" : ""
+                                  }`}
+                                  id="exampleModal"
+                                  tabIndex="-1"
+                                  role="dialog"
+                                  aria-labelledby="exampleModalLabel"
+                                  aria-hidden={!showModal}
+                                  style={{
+                                    display: showModal ? "block" : "none",
+                                  }}
+                                >
+                                  <div className="modal-dialog" role="document">
+                                    <div className="modal-content">
+                                      <div className="modal-header">
+                                        <button
+                                          type="button"
+                                          className="close"
+                                          data-dismiss="modal"
+                                          aria-label="Close"
+                                          onClick={() => setShowModal(false)}
+                                        >
+                                          <span aria-hidden="true">
+                                            &times;
+                                          </span>
+                                        </button>
+                                      </div>
+                                      <div className="modal-body">
+                                        <form>
+                                          <div className="form-group">
+                                            <label
+                                              htmlFor="recipient-name"
+                                              className="col-form-label"
+                                            >
+                                              Transaction password
+                                            </label>
+                                            <input
+                                              type="password"
+                                              className="form-control"
+                                              id="recipient-name"
+                                              value={transactionPassword}
+                                              onChange={(e) => {
+                                                setTransactionPassword(
+                                                  e.target.value
+                                                );
+                                              }}
+                                            />
+                                          </div>
+                                        </form>
+                                      </div>
+                                      <div className="modal-footer">
+                                        <button
+                                          type="submit"
+                                          className="btn btn-primary"
+                                        >
+                                          Do transfer
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </form>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </Card.Body>
               </Card>
             </Col>
@@ -343,59 +581,64 @@ const BentoUI = ({sessionId}) => {
                             <button
                               type="button"
                               className="btn btn-primary"
-                              data-toggle="modal"
-                              data-target={`#exampleModal${index}`}
+                              onClick={() => openTransferDetail(index)}
                             >
                               See details
                             </button>
                           </div>
 
-                          <div
-                            className="modal fade"
-                            id={`exampleModal${index}`}
-                            tabIndex="-1"
-                            role="dialog"
-                            aria-labelledby="exampleModalLabel"
-                            aria-hidden="true"
-                          >
-                            <div className="modal-dialog" role="document">
-                              <div className="modal-content">
-                                <div className="modal-header">
-                                  <h5
-                                    className="modal-title"
-                                    id="exampleModalLabel"
-                                  >
-                                    Transaction Details
-                                  </h5>
-                                  <button
-                                    type="button"
-                                    className="close"
-                                    data-dismiss="modal"
-                                    aria-label="Close"
-                                  >
-                                    <span aria-hidden="true">&times;</span>
-                                  </button>
-                                </div>
-                                <div className="modal-body">
-                                  <p>Amount: {transaction.amount} USD</p>
-                                  <p>
-                                    Date:{" "}
-                                    {moment(transaction.transactionDate).format(
-                                      "dddd, MMMM Do YYYY, h:mm:ss A"
-                                    )}
-                                  </p>
-                                  <p>
-                                    Sender Account: {transaction.senderAccount}
-                                  </p>
-                                  <p>
-                                    Receiver Account:{" "}
-                                    {transaction.recipientAccount}
-                                  </p>
-                                  <p>Description: {transaction.description}</p>
+                          {transferDetail === index && (
+                            <div
+                              className="modal fade show"
+                              id={`exampleModal${index}`}
+                              tabIndex="-1"
+                              role="dialog"
+                              aria-labelledby="exampleModalLabel"
+                              aria-hidden="true"
+                              style={{ display: "block" }}
+                            >
+                              <div className="modal-dialog" role="document">
+                                <div className="modal-content">
+                                  <div className="modal-header">
+                                    <h5
+                                      className="modal-title"
+                                      id="exampleModalLabel"
+                                    >
+                                      Transaction Details
+                                    </h5>
+                                    <button
+                                      type="button"
+                                      className="close"
+                                      onClick={closeTransferDetail}
+                                      aria-label="Close"
+                                    >
+                                      <span aria-hidden="true">&times;</span>
+                                    </button>
+                                  </div>
+                                  <div className="modal-body">
+                                    <p>Amount: {transaction.amount} USD</p>
+                                    <p>
+                                      Date:{" "}
+                                      {moment(
+                                        transaction.transactionDate
+                                      ).format("dddd, MMMM Do YYYY, h:mm:ss A")}
+                                    </p>
+                                    <p>
+                                      Sender Account:{" "}
+                                      {transaction.senderAccount}
+                                    </p>
+                                    <p>
+                                      Receiver Account:{" "}
+                                      {transaction.recipientAccount}
+                                    </p>
+                                    <p>
+                                      Description: {transaction.description}
+                                    </p>
+                                  </div>
                                 </div>
                               </div>
                             </div>
-                          </div>
+                          )}
                         </div>
                       );
                     } catch (error) {
@@ -411,4 +654,4 @@ const BentoUI = ({sessionId}) => {
   );
 };
 
-export default BentoUI;
+export default Home;
