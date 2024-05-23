@@ -17,6 +17,7 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const app = express();
+
 // Session configuration with connect-mongo
 app.use(
   session({
@@ -51,19 +52,47 @@ mongoose
     console.log(err);
   });
 
+// Session schema for fetching session data directly from MongoDB
+const sessionSchema = new mongoose.Schema(
+  {},
+  { strict: false, collection: "sessions" }
+);
+const Session = mongoose.model("Session", sessionSchema);
+
+async function getSessionData(sessionId) {
+  try {
+    const session = await Session.findOne({ _id: `sess:${sessionId}` });
+    if (session) {
+      const sessionData = JSON.parse(session.session);
+      return sessionData;
+    } else {
+      return null;
+    }
+  } catch (err) {
+    console.error("Error retrieving session data:", err);
+    return null;
+  }
+}
+
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
 app.get("/isLoggedIn", async (req, res) => {
+  const sessionId = req.sessionID;
+  let sessionData = req.session;
+
+  if (!sessionData) {
+    sessionData = await getSessionData(sessionId);
+  }
+
   const accounts = await Account.find({}).lean();
-  console.log(req.session.isLoggedIn);
-  if (!req.session.isLoggedIn) {
+  if (!sessionData || !sessionData.isLoggedIn) {
     res.json({ isLoggedIn: false, accounts });
   } else {
     res.json({
-      isLoggedIn: req.session.isLoggedIn,
-      username: req.session.username,
+      isLoggedIn: sessionData.isLoggedIn,
+      username: sessionData.username,
     });
   }
 });
@@ -83,11 +112,7 @@ app.post("/auth/login", async (req, res) => {
 
     if (hashedPassword !== user.password) {
       console.log("Invalid credentials");
-      return res
-        .status(400)
-        .json({
-          message: "Invalid credentials",
-        });
+      return res.status(400).json({ message: "Invalid credentials" });
     }
 
     req.session.isLoggedIn = true;
@@ -125,9 +150,12 @@ app.post("/auth/register", async (req, res) => {
         .json({ message: "User with this login name already exists" });
     }
 
-    const salt = crypto.randomBytes(16).toString('hex');
-    const hashedPassword = crypto.createHash('sha256').update(password + salt).digest('hex');
-    
+    const salt = crypto.randomBytes(16).toString("hex");
+    const hashedPassword = crypto
+      .createHash("sha256")
+      .update(password + salt)
+      .digest("hex");
+
     const newUser = new User({
       loginName,
       password: hashedPassword,
@@ -154,30 +182,37 @@ app.get("/user/list", (req, res) => {
     });
 });
 
-app.get("/transactionHistory", (req, res) => {
-  const userId = req.session.userId;
+app.get("/transactionHistory", async (req, res) => {
+  const sessionId = req.sessionID;
+  let sessionData = req.session;
 
+  if (!sessionData) {
+    sessionData = await getSessionData(sessionId);
+  }
+
+  const userId = sessionData.userId;
   if (!userId) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
-  Transaction.find({
-    $or: [{ senderUserId: userId }, { receiverUserId: userId }],
-  })
-    .then((transactions) => {
-      const modifiedTransactions = transactions.map((transaction) => {
-        if (transaction.senderUserId.toString() === userId) {
-          return { ...transaction._doc, type: "expense" };
-        } else if (transaction.receiverUserId.toString() === userId) {
-          return { ...transaction._doc, type: "income" };
-        }
-      });
-      res.json(modifiedTransactions);
-    })
-    .catch((err) => {
-      console.error("Error fetching transactions:", err);
-      res.status(500).json({ error: "Failed to fetch transactions" });
+  try {
+    const transactions = await Transaction.find({
+      $or: [{ senderUserId: userId }, { receiverUserId: userId }],
     });
+
+    const modifiedTransactions = transactions.map((transaction) => {
+      if (transaction.senderUserId.toString() === userId) {
+        return { ...transaction._doc, type: "expense" };
+      } else if (transaction.receiverUserId.toString() === userId) {
+        return { ...transaction._doc, type: "income" };
+      }
+    });
+
+    res.json(modifiedTransactions);
+  } catch (err) {
+    console.error("Error fetching transactions:", err);
+    res.status(500).json({ error: "Failed to fetch transactions" });
+  }
 });
 
 app.post("/transfer", async (req, res) => {
@@ -246,7 +281,13 @@ app.post("/transfer", async (req, res) => {
 });
 
 app.get("/getAccounts", async (req, res) => {
-  const userId = req.session.userId;
+  const sessionId = req.sessionID;
+  let sessionData = req.session;
+
+  if (!sessionData) {
+    sessionData = await getSessionData(sessionId);
+  }
+  const userId = sessionData.userId;
   if (!userId) {
     return res.status(401).json({ error: "Unauthorized" });
   }
@@ -274,24 +315,34 @@ app.get("/getAccounts", async (req, res) => {
     );
 
     const accountsFormatted = await Promise.all(accounts.map(extractUsername));
-    res.status(200).json({ accounts: accountsFormatted, userAccounts: userAccountsFormatted });
+    res.json({
+      userAccounts: userAccountsFormatted,
+      accounts: accountsFormatted,
+    });
   } catch (err) {
     console.error("Error fetching accounts:", err);
-    res.status(500).json({ message: "Failed to fetch accounts" });
+    res.status(500).json({ error: "Failed to fetch accounts" });
   }
 });
 
 app.get("/getBanks", async (req, res) => {
   try {
-    const banks = await Bank.find({});
-    res.status(200).json(banks);
+    const banks = await Bank.find({}).lean();
+    res.json(banks);
   } catch (err) {
     console.error("Error fetching banks:", err);
     res.status(500).json({ error: "Failed to fetch banks" });
   }
 });
+
 app.get("/getPersonalAccounts", async (req, res) => {
-  const userId = req.session.userId;
+  const sessionId = req.sessionID;
+  let sessionData = req.session;
+
+  if (!sessionData) {
+    sessionData = await getSessionData(sessionId);
+  }
+  const userId = sessionData.userId;
   if (!userId) {
     return res.status(401).json({ error: "Unauthorized" });
   }
