@@ -8,43 +8,53 @@ import Account from "./models/account.js";
 import Transaction from "./models/transaction.js";
 import Bank from "./models/bank.js";
 import crypto from "crypto";
-dotenv.config();
+import MongoStore from "connect-mongo";
 import path from "path";
 import { fileURLToPath } from "url";
+
+dotenv.config();
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const app = express();
+
+// Session configuration with connect-mongo
 app.use(
   session({
-    secret: "secretKey",
+    secret: process.env.SESSION_SECRET || "secretKey",
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: true, httpOnly: true },
+    store: MongoStore.create({
+      mongoUrl: process.env.DB_URI,
+      dbName: "bankSystem",
+      collectionName: "sessions",
+    }),
+    cookie: {
+      secure: process.env.NODE_ENV === "production",
+      httpOnly: true,
+      maxAge: 1000 * 60 * 60 * 24, // 1 day
+    },
   })
 );
 
 app.use(express.static(__dirname));
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
-});
+app.use(express.json());
+app.use(cors());
 
 mongoose.set("strictQuery", false);
 mongoose
   .connect(process.env.DB_URI, { dbName: "bankSystem" })
   .then(() => {
-    app.listen(3000,  () => {
-      console.log(`Listening at http://localhost:3000 `);
+    app.listen(3000, () => {
+      console.log(`Listening at http://localhost:3000`);
     });
   })
   .catch((err) => {
     console.log(err);
   });
 
-app.use(express.json());
-
 app.get("/", (req, res) => {
-  console.log("success");
-  res.send("Server is running");
+  res.sendFile(path.join(__dirname, "index.html"));
 });
 
 app.get("/isLoggedIn", (req, res) => {
