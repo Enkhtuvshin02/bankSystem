@@ -9,7 +9,7 @@ import { Doughnut } from "react-chartjs-2";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-const TransactionHistory = () => {
+const TransactionHistory = (sessionId) => {
   const [transactions, setTransactions] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [startDate, setStartDate] = useState(null);
@@ -19,6 +19,7 @@ const TransactionHistory = () => {
     axios
       .get(`/transactionHistory`, {
         withCredentials: true,
+        headers: { sessionId: sessionId },
       })
       .then((res) => {
         setTransactions(res.data);
