@@ -1,0 +1,9 @@
+.nav-text {
+  margin-left: 8px;
+}
+
+@media (max-width: 1005px) {
+  .nav-text {
+    display: none;
+  }
+}
