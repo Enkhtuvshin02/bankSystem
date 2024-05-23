@@ -10,7 +10,7 @@ import {
 import axios from "axios";
 import TransactionHistory from "./components/TransactionHistory/index.jsx";
 import Login from "./components/Login/index.jsx";
-import Topbar from "./components/Topbar/index.jsx";
+import Topbar from "./components/TopBar/index.jsx";
 import Transfer from "./components/Transfer/index.jsx";
 import Home from "./components/Home/index.jsx";
 import SideNav from "./components/SideNav/index.jsx";
