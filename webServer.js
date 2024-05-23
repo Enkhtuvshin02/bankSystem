@@ -8,6 +8,7 @@ import Account from "./models/account.js";
 import Transaction from "./models/transaction.js";
 import Bank from "./models/bank.js";
 import crypto from "crypto";
+import Template from "./models/template.js";
 import MongoStore from "connect-mongo";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -118,6 +119,61 @@ app.post("/auth/login", async (req, res) => {
   }
 });
 
+app.post("/saveTemplate", async (req, res) => {
+  const sessionCookie = req.cookies.session;
+  const userId = sessionCookie.userId;
+  try {
+    const {
+      templateName,
+      selectedAccountNumber,
+      recipientName,
+      selectedBank,
+      recipientAccount,
+      selectedAccountType,
+      recipientUserId,
+    } = req.body;
+    const newTemplate = new Template({
+      userId,
+      templateName: templateName,
+      senderAccount: selectedAccountNumber,
+      recipientName: recipientName,
+      recipientBank: selectedBank,
+      recipientAccount: recipientAccount,
+      currency: selectedAccountType,
+      receiverUserId: recipientUserId,
+    });
+    await newTemplate.save();
+
+    res.status(200).json(newTemplate._id);
+  } catch (err) {
+    console.error("Error adding template:", err);
+    res.status(500).json({ message: "Failed to create template" });
+  }
+  return null;
+});
+
+app.get("/getTemplates", (req, res) => {
+  const sessionCookie = req.cookies.session;
+  const userId = sessionCookie.userId;
+
+  Template.find({ userId })
+    .then(async (templates) => {
+      const templatesWithBankNames = await Promise.all(
+        templates.map(async (template) => {
+          const bank = await Bank.findById(template.recipientBank);
+          return {
+            ...template._doc,
+            bankName: bank ? bank.name : "Unknown Bank",
+          };
+        })
+      );
+      res.json(templatesWithBankNames);
+    })
+    .catch((err) => {
+      console.error("Error fetching templates:", err);
+      res.status(500).json({ error: "Failed to fetch templates" });
+    });
+});
 app.post("/auth/logout", (req, res) => {
   req.session.destroy((err) => {
     if (err) {
@@ -329,16 +385,25 @@ app.get("/getPersonalAccounts", async (req, res) => {
   }
 
   try {
-    const accounts = await Account.find({ userId }).lean();
-
-    const extractUsername = async (account) => {
-      const user = await User.findOne({ _id: account.userId }).lean();
-      return { ...account, username: user.firstName + " " + user.lastName };
+   const accounts = await Account.find({ userId }).lean();
+  const extractTransactionPassword = async (account) => {
+    const user = await User.findOne({ _id: account.userId }).lean();
+    return {
+      ...account,
+      transactionPassword: user.transactionPassword,
+      salt: user.salt,
     };
+  };
+  const extractUsername = async (account) => {
+    const user = await User.findOne({ _id: account.userId }).lean();
+    return { ...account, username: user.firstName + " " + user.lastName };
+  };
 
-    const accountsFormatted = await Promise.all(accounts.map(extractUsername));
-
-    res.status(200).json(accountsFormatted);
+  const accountsFormatted1 = await Promise.all(accounts.map(extractUsername));
+  const accountsFormatted2 = await Promise.all(
+    accountsFormatted1.map(extractTransactionPassword)
+  );
+    res.status(200).json(accountsFormatted2);
   } catch (err) {
     console.error("Error fetching personal accounts:", err);
     res.status(500).json({ error: "Failed to fetch personal accounts" });
