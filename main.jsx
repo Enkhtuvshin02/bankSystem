@@ -56,6 +56,7 @@ const AppContent = () => {
   }, [isLoggedIn, navigate]);
 
   const handleLogin = (sessionId) => {
+    console.log("sessionId in main "+sessionId);
     setSessionId(sessionId);
     setIsLoggedIn(true);
   };
