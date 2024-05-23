@@ -9,7 +9,7 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import { Doughnut } from "react-chartjs-2";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
-const BentoUI = () => {
+const BentoUI = (sessionId) => {
   const [transactions, setTransactions] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const [accountIndex, setAccountIndex] = useState(0);
@@ -30,19 +30,19 @@ const BentoUI = () => {
   });
 
   useEffect(() => {
-    
     axios
       .all([
         axios.get(`/transactionHistory`, {
+          headers: { sessionId: sessionId },
           withCredentials: true,
         }),
         axios.get(`/getPersonalAccounts`, {
+          headers: { sessionId: sessionId },
           withCredentials: true,
         }),
       ])
       .then((res) => {
         const [res1, res2] = res;
-        console.log(res1.data, res2.data)
         setTransactions(res1.data);
         setAccounts(res2.data);
         updateChartData(res1.data);
