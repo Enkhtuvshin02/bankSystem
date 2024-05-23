@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { Card } from "react-bootstrap";
 import crypto from "crypto-browserify";
 
-const Transfer = () => {
+const Transfer = (sessionId) => {
   const navigate = useNavigate();
   const [userAccounts, setUserAccounts] = useState([]);
   const [accounts, setAccounts] = useState([]);
@@ -28,7 +28,10 @@ const Transfer = () => {
 
   useEffect(() => {
     axios
-      .get(`/getAccounts`, { withCredentials: true })
+      .get(`/getAccounts`, {
+        withCredentials: true,
+        headers: { sessionId: sessionId },
+      })
       .then((res) => {
         setAccounts(res.data.accounts);
         setUserAccounts(res.data.userAccounts);
