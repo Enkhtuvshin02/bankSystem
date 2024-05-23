@@ -119,7 +119,7 @@ const AppContent = () => {
             style={{
               position: "absolute",
               top: "9px",
-              right: "100px",
+              right: "210px",
               color: "#0d6efd",
             }}
           >
