@@ -8,6 +8,7 @@ const Login = ({ isLoggedIn, handleLogin }) => {
   const navigate = useNavigate();
 
   const Login = async (e) => {
+    console.log("Login test");
     e.preventDefault();
     try {
       const { data } = await axios.post(
