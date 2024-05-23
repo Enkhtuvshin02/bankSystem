@@ -17,13 +17,12 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const app = express();
-
 // Session configuration with connect-mongo
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "secretKey",
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false,
     store: MongoStore.create({
       mongoUrl: process.env.DB_URI,
       dbName: "bankSystem",
@@ -39,7 +38,6 @@ app.use(
 
 app.use(express.static(__dirname));
 app.use(express.json());
-app.use(cors());
 
 mongoose.set("strictQuery", false);
 mongoose
@@ -57,10 +55,10 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
-app.get("/isLoggedIn",async (req, res) => {
+app.get("/isLoggedIn", async (req, res) => {
   const accounts = await Account.find({}).lean();
   console.log(req.session.isLoggedIn);
-  if (req.session.isLoggedIn === undefined) {
+  if (!req.session.isLoggedIn) {
     res.json({ isLoggedIn: false, accounts });
   } else {
     res.json({
@@ -78,7 +76,7 @@ app.post("/auth/login", async (req, res) => {
       return res.status(400).json({ message: "User not found" });
     }
 
-    const hashedPassword = await crypto
+    const hashedPassword = crypto
       .createHash("sha256")
       .update(password + user.salt)
       .digest("hex");
@@ -89,15 +87,14 @@ app.post("/auth/login", async (req, res) => {
         .status(400)
         .json({
           message: "Invalid credentials",
-          hashedPassword: hashedPassword,
         });
     }
 
     req.session.isLoggedIn = true;
     req.session.userId = user._id;
-    req.session.username = user.firstName + " " + user.lastName;
+    req.session.username = `${user.firstName} ${user.lastName}`;
 
-    res.status(200).json({ message: "success",  session:req.session.userId });
+    res.status(200).json({ message: "success" });
   } catch (err) {
     console.error("Error logging in:", err);
     res.status(500).json({ message: "Failed to log in" });
@@ -120,35 +117,30 @@ app.post("/auth/logout", (req, res) => {
 
 app.post("/auth/register", async (req, res) => {
   try {
-    const { loginName } = req.body;
+    const { loginName, password } = req.body;
     const found = await User.findOne({ loginName });
-    console.log(loginName, req.body.password);
     if (found) {
       return res
         .status(400)
         .json({ message: "User with this login name already exists" });
     }
+
+    const salt = crypto.randomBytes(16).toString('hex');
+    const hashedPassword = crypto.createHash('sha256').update(password + salt).digest('hex');
+    
     const newUser = new User({
-      loginName: req.body.loginName,
-      password: req.body.password,
+      loginName,
+      password: hashedPassword,
+      salt,
     });
 
     await newUser.save();
 
-    const createdUser = await User.findOne({ loginName });
-
-    if (createdUser) {
-      res.status(200).json(createdUser);
-    } else {
-      res
-        .status(500)
-        .json({ message: "User created but failed to retrieve user info" });
-    }
+    res.status(200).json(newUser);
   } catch (err) {
     console.error("Error adding user:", err);
     res.status(500).json({ message: "Failed to create user" });
   }
-  return null;
 });
 
 app.get("/user/list", (req, res) => {
@@ -161,6 +153,7 @@ app.get("/user/list", (req, res) => {
       res.status(500).json({ error: "Failed to fetch users" });
     });
 });
+
 app.get("/transactionHistory", (req, res) => {
   const userId = req.session.userId;
 
@@ -208,7 +201,7 @@ app.post("/transfer", async (req, res) => {
     const user = await User.findOne({ _id: senderUserId });
     if (transactionPassword !== user.transactionPassword) {
       console.log("Transaction password didn't match");
-      return res.status(404).json("Transaction password ");
+      return res.status(404).json("Transaction password didn't match");
     }
     const receiver = await Account.findOne({
       bankId: recipientBank,
@@ -216,12 +209,12 @@ app.post("/transfer", async (req, res) => {
     });
     if (!receiver) {
       console.log("Recipient account not found");
-      return res.status(404).json("Recipient");
+      return res.status(404).json("Recipient account not found");
     }
     const sender = await Account.findOne({ accountNumber: senderAccount });
     if (sender.balance < transferAmount) {
       console.log("Insufficient funds");
-      return res.status(400).json("Balance");
+      return res.status(400).json("Insufficient funds");
     }
 
     sender.balance -= transferAmount;
@@ -251,6 +244,7 @@ app.post("/transfer", async (req, res) => {
       .json({ message: "Failed to create transaction", error: err.message });
   }
 });
+
 app.get("/getAccounts", async (req, res) => {
   const userId = req.session.userId;
   if (!userId) {
@@ -278,63 +272,21 @@ app.get("/getAccounts", async (req, res) => {
     const userAccountsFormatted = await Promise.all(
       userAccounts.map(extractTransactionPassword)
     );
+
     const accountsFormatted = await Promise.all(accounts.map(extractUsername));
-    const banks = await Bank.find({}).lean();
-
-    res.status(200).json({
-      userAccounts: userAccountsFormatted,
-      accounts: accountsFormatted,
-      banks,
-    });
+    res.status(200).json({ accounts: accountsFormatted, userAccounts: userAccountsFormatted });
   } catch (err) {
-    console.error("Error fetching data:", err);
-    res.status(500).json({ error: "Failed to fetch data" });
+    console.error("Error fetching accounts:", err);
+    res.status(500).json({ message: "Failed to fetch accounts" });
   }
 });
-app.get("/getPersonalAccounts", async (req, res) => {
-  const userId = req.session.userId;
-  if (!userId) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-  const accounts = await Account.find({ userId }).lean();
 
-  const extractUsername = async (account) => {
-    const user = await User.findOne({ _id: account.userId }).lean();
-    return { ...account, username: user.firstName + " " + user.lastName };
-  };
-
-  const accountsFormatted = await Promise.all(accounts.map(extractUsername));
-  if (accountsFormatted) {
-    res.status(200).json(accountsFormatted);
-  } else {
-    console.error("Error fetching data:", err);
-    res.status(500).json({ error: "Failed to fetch data" });
-  }
-});
-/*
-const makePasswordHashed = async () => {
+app.get("/getBanks", async (req, res) => {
   try {
-    const users = await User.find({});
-    users.map(async (user) => {
-      const hashedPassword = crypto
-        .createHash("sha256")
-        .update(user.password + user.salt) // Include salt in the password before hashing
-        .digest("hex");
-
-      const hashedTransactionPassword = crypto
-        .createHash("sha256")
-        .update(user.transactionPassword + user.salt) // Include salt in the transaction password before hashing
-        .digest("hex");
-
-      // Update the user's hashed passwords in the database
-      await User.findByIdAndUpdate(user._id, {
-        password: hashedPassword,
-        transactionPassword: hashedTransactionPassword,
-      });
-    });
+    const banks = await Bank.find({});
+    res.status(200).json(banks);
   } catch (err) {
-    console.error("Error hashing passwords:", err);
+    console.error("Error fetching banks:", err);
+    res.status(500).json({ error: "Failed to fetch banks" });
   }
-};
-
-makePasswordHashed();*/
+});
