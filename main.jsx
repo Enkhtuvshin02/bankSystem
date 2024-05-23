@@ -11,10 +11,9 @@ import {
 import axios from "axios";
 import TransactionHistory from "./components/TransactionHistory/index.jsx";
 import Login from "./components/Login/index.jsx";
-import Topbar from "./components/Topbar/index.jsx";
+import Topbar from "./components/TopBar/index.jsx";
 import Transfer from "./components/Transfer/index.jsx";
 import Home from "./components/Home/index.jsx";
-import { API_BASE_URL } from "./config.js";
 import SideNav from "./components/SideNav/index.jsx";
 
 import "./styles/main.css";
@@ -26,7 +25,7 @@ const AppContent = () => {
   const [loggedUsersName, setloggedUsersName] = useState(null);
   useEffect(() => {
     axios
-      .get(`${API_BASE_URL}/isLoggedIn`, { withCredentials: true })
+      .get(`/isLoggedIn`, { withCredentials: true })
       .then(
         (res) => {
           console.log(res.data.username);
@@ -58,7 +57,7 @@ const AppContent = () => {
 
   const handleLogout = () => {
     axios
-      .post(`${API_BASE_URL}/auth/logout`, {}, { withCredentials: true })
+      .post(`/auth/logout`, {}, { withCredentials: true })
       .then(() => {
         setIsLoggedIn(false);
         navigate("/login");
