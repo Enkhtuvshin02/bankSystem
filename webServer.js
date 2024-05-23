@@ -79,7 +79,7 @@ app.get("/", (req, res) => {
 });
 
 app.get("/isLoggedIn", async (req, res) => {
-  const sessionId = req.headers.sessionid || req.sessionID;
+  const sessionId = req.headers.sessionId || req.sessionID;
   let sessionData = req.session;
 
   if (!sessionData) {
@@ -186,7 +186,7 @@ app.get("/user/list", (req, res) => {
 });
 
 app.get("/transactionHistory", async (req, res) => {
-  const sessionId = req.headers.sessionid || req.sessionID;
+  const sessionId = req.headers.sessionId || req.sessionID;
   let sessionData = req.session;
 
   if (!sessionData) {
@@ -219,7 +219,7 @@ app.get("/transactionHistory", async (req, res) => {
 });
 
 app.post("/transfer", async (req, res) => {
-  const sessionId = req.headers.sessionid || req.sessionID;
+  const sessionId = req.headers.sessionId || req.sessionID;
   let sessionData = req.session;
   let senderUserId;
   if (!sessionData) {
@@ -290,7 +290,7 @@ app.post("/transfer", async (req, res) => {
 });
 
 app.get("/getAccounts", async (req, res) => {
-  const sessionId = req.headers.sessionid || req.sessionID;
+  const sessionId = req.headers.sessionId || req.sessionID;
 
   let sessionData = req.session;
 
@@ -346,7 +346,7 @@ app.get("/getBanks", async (req, res) => {
 });
 
 app.get("/getPersonalAccounts", async (req, res) => {
-  const sessionId = req.headers.sessionid || req.sessionID;
+  const sessionId = req.headers.sessionId || req.sessionID;
 
   let sessionData = req.session;
 
