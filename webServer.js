@@ -195,7 +195,7 @@ app.get("/transactionHistory", async (req, res) => {
 
   const userId = sessionData.userId;
   if (!userId) {
-    return res..json({ error: "Unauthorized",sessionId:sessionId,sessionData:sessionData });
+    return res.json({ error: "Unauthorized",sessionId:sessionId,sessionData:sessionData });
   }
 
   try {
