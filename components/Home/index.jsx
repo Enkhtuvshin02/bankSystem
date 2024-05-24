@@ -270,7 +270,7 @@ const fetchData = () => {
                                         }}
                                       >
                                         {" "}
-                                        10/2{index}
+                                        10/2
                                       </p>
                                     </div>
                                   </div>
@@ -305,7 +305,7 @@ const fetchData = () => {
                                           background: "white",
                                         }}
                                       >
-                                        82{index}
+                                        821
                                       </p>
                                     </div>
                                   </div>
