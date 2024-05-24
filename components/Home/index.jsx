@@ -42,31 +42,35 @@ const Home = () => {
       },
     ],
   });
-  useEffect(() => {
-    axios
-      .all([
-        axios.get(`/transactionHistory`, {
-          withCredentials: true,
-        }),
-        axios.get(`/getPersonalAccounts`, {
-          withCredentials: true,
-        }),
-        axios.get(`/getTemplates`, {
-          withCredentials: true,
-        }),
-      ])
-      .then((res) => {
-        const [res1, res2, res3] = res;
-        setTransactions(res1.data);
-        setAccounts(res2.data);
-        updateChartData(res1.data);
-        setTemplates(res3.data);
-      })
-      .catch((err) => {
-        console.error(err);
-        setError("Failed to fetch data. Please try again later.");
-      });
-  }, []);
+ useEffect(() => {
+  fetchData();
+}, []);
+const fetchData = () => {
+  axios
+    .all([
+      axios.get(`/transactionHistory`, {
+        withCredentials: true,
+      }),
+      axios.get(`/getPersonalAccounts`, {
+        withCredentials: true,
+      }),
+      axios.get(`/getTemplates`, {
+        withCredentials: true,
+      }),
+    ])
+    .then((res) => {
+      const [res1, res2, res3] = res;
+      setTransactions(res1.data);
+      setAccounts(res2.data);
+      updateChartData(res1.data);
+      setTemplates(res3.data);
+    })
+    .catch((err) => {
+      console.error(err);
+      setError("Failed to fetch data. Please try again later.");
+    });
+};
+
 
   const updateChartData = (transactionsData) => {
     let expenses = 0;
@@ -119,48 +123,50 @@ const Home = () => {
     const modal = new window.bootstrap.Modal(modalElement);
     modal.show();
   };
-  const handleFormSubmit = async (e, index) => {
-    e.preventDefault();
-    const hashedTransactionPassword = await crypto
-      .createHash("sha256")
-      .update(transactionPassword + accounts[0].salt)
-      .digest("hex");
+ const handleFormSubmit = async (e, index) => {
+  e.preventDefault();
+  const hashedTransactionPassword = await crypto
+    .createHash("sha256")
+    .update(transactionPassword + accounts[0].salt)
+    .digest("hex");
 
-    if (hashedTransactionPassword !== accounts[0].transactionPassword) {
-      alert("Transaction password did not match");
-      return;
-    }
+  if (hashedTransactionPassword !== accounts[0].transactionPassword) {
+    alert("Transaction password did not match");
+    return;
+  }
 
-    try {
-      const data = await axios.post(
-        `/transfer`,
-        {
-          senderAccount: templates[index].senderAccount,
-          recipientName: templates[index].recipientName,
-          recipientBank: templates[index].recipientBank,
-          recipientAccount: templates[index].recipientAccount,
-          description: description,
-          amount: transferAmount,
-          currency: templates[index].currency,
-          receiverUserId: templates[index].receiverUserId,
-          transactionPassword: hashedTransactionPassword,
-        },
-        { withCredentials: true }
-      );
-      setShowModal(false);
-    } catch (err) {
-      console.log(err.response);
-      if (err.response.data === "Recipient") {
-        alert("Check account number or bank");
-      } else if (err.response.data === "Balance") {
-        alert("Balance not enough");
-      } else if (err.response.data === "Transaction password") {
-        alert("Balance not enough");
-      } else {
-        alert("Transfer failed");
-      }
+  try {
+    const data = await axios.post(
+      `/transfer`,
+      {
+        senderAccount: templates[index].senderAccount,
+        recipientName: templates[index].recipientName,
+        recipientBank: templates[index].recipientBank,
+        recipientAccount: templates[index].recipientAccount,
+        description: description,
+        amount: transferAmount,
+        currency: templates[index].currency,
+        receiverUserId: templates[index].receiverUserId,
+        transactionPassword: hashedTransactionPassword,
+      },
+      { withCredentials: true }
+    );
+    setShowModal(false);
+    fetchData();  
+  } catch (err) {
+    console.log(err.response);
+    if (err.response.data === "Recipient") {
+      alert("Check account number or bank");
+    } else if (err.response.data === "Balance") {
+      alert("Balance not enough");
+    } else if (err.response.data === "Transaction password ") {
+      alert("Password didn't match");
+    } else {
+      alert("Transfer failed");
     }
-  };
+  }
+};
+
   return (
     <Container fluid className="p-3">
       <Row className="bentoRow">
