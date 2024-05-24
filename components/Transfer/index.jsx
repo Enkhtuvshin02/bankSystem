@@ -80,7 +80,9 @@ const Transfer = () => {
         { withCredentials: true }
       );
       if (data) {
-        handleCloseModal(); // Close the modal
+        
+        handleCloseModal(); 
+        navigate("/");
       }
     } catch (err) {
       console.log(err.response);
@@ -150,6 +152,7 @@ const Transfer = () => {
       setRecipientName(foundAccount.username);
     } else {
       console.log("not found");
+      
     }
   };
 
