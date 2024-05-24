@@ -22,6 +22,7 @@ const app = express();
 // Session configuration with connect-mongo
 app.use(
   session({
+    name: 'session', 
     secret: process.env.SESSION_SECRET || "secretKey",
     resave: false,
     saveUninitialized: false,
@@ -37,6 +38,7 @@ app.use(
     },
   })
 );
+
 
 app.use(express.static(__dirname));
 app.use(express.json());
@@ -180,11 +182,16 @@ app.post("/auth/logout", (req, res) => {
       console.error("Error destroying session:", err);
       return res.status(500).json({ message: "Failed to log out" });
     } else {
-      res.clearCookie("connect.sid");
+      res.clearCookie("session", {
+        path: '/', 
+        httpOnly: true, 
+        secure: process.env.NODE_ENV === "production"
+      });
       return res.status(200).json({ message: "Logged out successfully" });
     }
   });
 });
+
 
 app.post("/auth/register", async (req, res) => {
   try {
