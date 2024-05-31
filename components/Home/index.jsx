@@ -19,10 +19,10 @@ const Home = () => {
   const [showTransfer, setShowTransfer] = useState([]);
   const [transferAmount, setTransferAmount] = useState("");
   const [description, setDescription] = useState("");
-  const [showModal, setShowModal] = useState(false);
+
   const [transactionPassword, setTransactionPassword] = useState("");
   const [transferDetail, setTransferDetail] = useState(null);
-
+  const [modalInstances, setModalInstances] = useState([]);
   const openTransferDetail = (index) => {
     setTransferDetail(index);
   };
@@ -42,35 +42,34 @@ const Home = () => {
       },
     ],
   });
- useEffect(() => {
-  fetchData();
-}, []);
-const fetchData = () => {
-  axios
-    .all([
-      axios.get(`/transactionHistory`, {
-        withCredentials: true,
-      }),
-      axios.get(`/getPersonalAccounts`, {
-        withCredentials: true,
-      }),
-      axios.get(`/getTemplates`, {
-        withCredentials: true,
-      }),
-    ])
-    .then((res) => {
-      const [res1, res2, res3] = res;
-      setTransactions(res1.data);
-      setAccounts(res2.data);
-      updateChartData(res1.data);
-      setTemplates(res3.data);
-    })
-    .catch((err) => {
-      console.error(err);
-      setError("Failed to fetch data. Please try again later.");
-    });
-};
-
+  useEffect(() => {
+    fetchData();
+  }, []);
+  const fetchData = () => {
+    axios
+      .all([
+        axios.get(`/transactionHistory`, {
+          withCredentials: true,
+        }),
+        axios.get(`/getPersonalAccounts`, {
+          withCredentials: true,
+        }),
+        axios.get(`/getTemplates`, {
+          withCredentials: true,
+        }),
+      ])
+      .then((res) => {
+        const [res1, res2, res3] = res;
+        setTransactions(res1.data);
+        setAccounts(res2.data);
+        updateChartData(res1.data);
+        setTemplates(res3.data);
+      })
+      .catch((err) => {
+        console.error(err);
+        setError("Failed to fetch data. Please try again later.");
+      });
+  };
 
   const updateChartData = (transactionsData) => {
     let expenses = 0;
@@ -122,50 +121,59 @@ const fetchData = () => {
     const modalElement = modalRefs.current[index];
     const modal = new window.bootstrap.Modal(modalElement);
     modal.show();
+    setModalInstances((prev) => {
+      const newInstances = [...prev];
+      newInstances[index] = modal;
+      return newInstances;
+    });
   };
- const handleFormSubmit = async (e, index) => {
-  e.preventDefault();
-  const hashedTransactionPassword = await crypto
-    .createHash("sha256")
-    .update(transactionPassword + accounts[0].salt)
-    .digest("hex");
+  const handleFormSubmit = async (e, index) => {
+    e.preventDefault();
+    const hashedTransactionPassword = await crypto
+      .createHash("sha256")
+      .update(transactionPassword + accounts[0].salt)
+      .digest("hex");
 
-  if (hashedTransactionPassword !== accounts[0].transactionPassword) {
-    alert("Transaction password did not match");
-    return;
-  }
-
-  try {
-    const data = await axios.post(
-      `/transfer`,
-      {
-        senderAccount: templates[index].senderAccount,
-        recipientName: templates[index].recipientName,
-        recipientBank: templates[index].recipientBank,
-        recipientAccount: templates[index].recipientAccount,
-        description: description,
-        amount: transferAmount,
-        currency: templates[index].currency,
-        receiverUserId: templates[index].receiverUserId,
-        transactionPassword: hashedTransactionPassword,
-      },
-      { withCredentials: true }
-    );
-    setShowModal(false);
-    fetchData();  
-  } catch (err) {
-    console.log(err.response);
-    if (err.response.data === "Recipient") {
-      alert("Check account number or bank");
-    } else if (err.response.data === "Balance") {
-      alert("Balance not enough");
-    } else if (err.response.data === "Transaction password ") {
-      alert("Password didn't match");
-    } else {
-      alert("Transfer failed");
+    if (hashedTransactionPassword !== accounts[0].transactionPassword) {
+      alert("Transaction password did not match");
+      return;
     }
-  }
-};
+
+    try {
+      const data = await axios.post(
+        `/transfer`,
+        {
+          senderAccount: templates[index].senderAccount,
+          recipientName: templates[index].recipientName,
+          recipientBank: templates[index].recipientBank,
+          recipientAccount: templates[index].recipientAccount,
+          description: description,
+          amount: transferAmount,
+          currency: templates[index].currency,
+          receiverUserId: templates[index].receiverUserId,
+          transactionPassword: hashedTransactionPassword,
+        },
+        { withCredentials: true }
+      );
+
+      fetchData();
+      const modal = modalInstances[index];
+      if (modal) {
+        modal.hide();
+      }
+    } catch (err) {
+      console.log(err.response);
+      if (err.response.data === "Recipient") {
+        alert("Check account number or bank");
+      } else if (err.response.data === "Balance") {
+        alert("Balance not enough");
+      } else if (err.response.data === "Transaction password ") {
+        alert("Password didn't match");
+      } else {
+        alert("Transfer failed");
+      }
+    }
+  };
 
   return (
     <Container fluid className="p-3">
@@ -460,76 +468,29 @@ const fetchData = () => {
                                     }
                                   />
                                 </div>
+                                <div className="form-group">
+                                  <label
+                                    htmlFor="recipient-name"
+                                    className="col-form-label"
+                                  >
+                                    Гүйлгээний нууц үг
+                                  </label>
+                                  <input
+                                    type="password"
+                                    className="form-control"
+                                    id="recipient-name"
+                                    value={transactionPassword}
+                                    onChange={(e) => {
+                                      setTransactionPassword(e.target.value);
+                                    }}
+                                  />
+                                </div>{" "}
                                 <button
-                                  type="button"
+                                  type="submit"
                                   className="btn btn-primary"
-                                  onClick={() => setShowModal(true)}
                                 >
                                   Гүйлгээ хийх
                                 </button>
-
-                                <div
-                                  className={`modal fade ${
-                                    showModal ? "show" : ""
-                                  }`}
-                                  id="exampleModal"
-                                  tabIndex="-1"
-                                  role="dialog"
-                                  aria-labelledby="exampleModalLabel"
-                                  aria-hidden={!showModal}
-                                  style={{
-                                    display: showModal ? "block" : "none",
-                                  }}
-                                >
-                                  <div className="modal-dialog" role="document">
-                                    <div className="modal-content">
-                                      <div className="modal-header">
-                                        <button
-                                          type="button"
-                                          className="close"
-                                          data-dismiss="modal"
-                                          aria-label="Close"
-                                          onClick={() => setShowModal(false)}
-                                        >
-                                          <span aria-hidden="true">
-                                            &times;
-                                          </span>
-                                        </button>
-                                      </div>
-                                      <div className="modal-body">
-                                        <form>
-                                          <div className="form-group">
-                                            <label
-                                              htmlFor="recipient-name"
-                                              className="col-form-label"
-                                            >
-                                              Гүйлгээний нууц үг
-                                            </label>
-                                            <input
-                                              type="password"
-                                              className="form-control"
-                                              id="recipient-name"
-                                              value={transactionPassword}
-                                              onChange={(e) => {
-                                                setTransactionPassword(
-                                                  e.target.value
-                                                );
-                                              }}
-                                            />
-                                          </div>
-                                        </form>
-                                      </div>
-                                      <div className="modal-footer">
-                                        <button
-                                          type="submit"
-                                          className="btn btn-primary"
-                                        >
-                                          Гүйлгээ хийх
-                                        </button>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
                               </form>
                             </div>
                           </div>
