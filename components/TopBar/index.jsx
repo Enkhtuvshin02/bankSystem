@@ -1,7 +1,5 @@
-import React, { useState } from "react";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
-import { API_BASE_URL } from "../../config.js";
+import React from "react";
+import PropTypes from "prop-types";
 
 function Navbar({ loggedUsersName, handleLogout }) {
   return (
@@ -14,10 +12,9 @@ function Navbar({ loggedUsersName, handleLogout }) {
             </a>
           </li>
         )}
-
         <li className="nav-item">
           <a
-            className="nav-link "
+            className="nav-link"
             href="#"
             onClick={() => {
               handleLogout();
@@ -30,5 +27,10 @@ function Navbar({ loggedUsersName, handleLogout }) {
     </div>
   );
 }
+
+Navbar.propTypes = {
+  loggedUsersName: PropTypes.string,
+  handleLogout: PropTypes.func.isRequired,
+};
 
 export default Navbar;

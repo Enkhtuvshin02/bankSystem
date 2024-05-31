@@ -2,7 +2,6 @@ import express from "express";
 import mongoose from "mongoose";
 import session from "express-session";
 import dotenv from "dotenv";
-import cors from "cors";
 import User from "./models/user.js";
 import Account from "./models/account.js";
 import Transaction from "./models/transaction.js";
@@ -22,7 +21,7 @@ const app = express();
 // Session configuration with connect-mongo
 app.use(
   session({
-    name: 'session', 
+    name: "session",
     secret: process.env.SESSION_SECRET || "secretKey",
     resave: false,
     saveUninitialized: false,
@@ -38,7 +37,6 @@ app.use(
     },
   })
 );
-
 
 app.use(express.static(__dirname));
 app.use(express.json());
@@ -60,21 +58,6 @@ const sessionSchema = new mongoose.Schema(
   { strict: false, collection: "sessions" }
 );
 const Session = mongoose.model("Session", sessionSchema);
-
-async function getSessionData(sessionId) {
-  try {
-    const session = await Session.findOne({ _id: `sess:${sessionId}` });
-    if (session) {
-      const sessionData = JSON.parse(session.session);
-      return sessionData;
-    } else {
-      return null;
-    }
-  } catch (err) {
-    console.error("Error retrieving session data:", err);
-    return null;
-  }
-}
 
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
@@ -183,15 +166,14 @@ app.post("/auth/logout", (req, res) => {
       return res.status(500).json({ message: "Failed to log out" });
     } else {
       res.clearCookie("session", {
-        path: '/', 
-        httpOnly: true, 
-        secure: process.env.NODE_ENV === "production"
+        path: "/",
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
       });
       return res.status(200).json({ message: "Logged out successfully" });
     }
   });
 });
-
 
 app.post("/auth/register", async (req, res) => {
   try {
@@ -392,24 +374,24 @@ app.get("/getPersonalAccounts", async (req, res) => {
   }
 
   try {
-   const accounts = await Account.find({ userId }).lean();
-  const extractTransactionPassword = async (account) => {
-    const user = await User.findOne({ _id: account.userId }).lean();
-    return {
-      ...account,
-      transactionPassword: user.transactionPassword,
-      salt: user.salt,
+    const accounts = await Account.find({ userId }).lean();
+    const extractTransactionPassword = async (account) => {
+      const user = await User.findOne({ _id: account.userId }).lean();
+      return {
+        ...account,
+        transactionPassword: user.transactionPassword,
+        salt: user.salt,
+      };
     };
-  };
-  const extractUsername = async (account) => {
-    const user = await User.findOne({ _id: account.userId }).lean();
-    return { ...account, username: user.firstName + " " + user.lastName };
-  };
+    const extractUsername = async (account) => {
+      const user = await User.findOne({ _id: account.userId }).lean();
+      return { ...account, username: user.firstName + " " + user.lastName };
+    };
 
-  const accountsFormatted1 = await Promise.all(accounts.map(extractUsername));
-  const accountsFormatted2 = await Promise.all(
-    accountsFormatted1.map(extractTransactionPassword)
-  );
+    const accountsFormatted1 = await Promise.all(accounts.map(extractUsername));
+    const accountsFormatted2 = await Promise.all(
+      accountsFormatted1.map(extractTransactionPassword)
+    );
     res.status(200).json(accountsFormatted2);
   } catch (err) {
     console.error("Error fetching personal accounts:", err);

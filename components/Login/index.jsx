@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-
-const Login = ({ isLoggedIn, handleLogin }) => {
+import PropTypes from "prop-types";
+const Login = ({ handleLogin }) => {
   const [loginName, setLoginName] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
@@ -36,50 +36,50 @@ const Login = ({ isLoggedIn, handleLogin }) => {
         }}
       >
         <form onSubmit={Login}>
-          <div data-mdb-input-init class="form-outline mb-4">
-            <label class="form-label" htmlFor="form2Example1">
+          <div data-mdb-input-init className="form-outline mb-4">
+            <label className="form-label" htmlFor="form2Example1">
               Нэвтрэх нэр
             </label>
             <input
               type="text"
               id="form2Example1"
-              class="form-control"
+              className="form-control"
               value={loginName}
               onChange={(e) => setLoginName(e.target.value)}
             />
           </div>
 
-          <div data-mdb-input-init class="form-outline mb-4">
-            <label class="form-label" htmlFor="form2Example1">
+          <div data-mdb-input-init className="form-outline mb-4">
+            <label className="form-label" htmlFor="form2Example1">
               Нууц үг
             </label>
             <input
               type="password"
               id="form2Example1"
-              class="form-control"
+              className="form-control"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
 
-          <div class="row mb-4">
-            <div class="col d-flex justify-content-center">
-              <div class="form-check">
+          <div className="row mb-4">
+            <div className="col d-flex justify-content-center">
+              <div className="form-check">
                 <input
-                  class="form-check-input"
+                  className="form-check-input"
                   type="checkbox"
                   value=""
                   id="form2Example31"
                   checked
                 />
-                <label class="form-check-label" for="form2Example31">
+                <label className="form-check-label" htmlFor="form2Example31">
                   {" "}
                   Сануулах{" "}
                 </label>
               </div>
             </div>
 
-            <div class="col">
+            <div className="col">
               <a href="#!">Нууц үг сэргээх?</a>
             </div>
           </div>
@@ -88,11 +88,11 @@ const Login = ({ isLoggedIn, handleLogin }) => {
             type="submit"
             data-mdb-button-init
             data-mdb-ripple-init
-            class="btn btn-primary btn-block mb-4"
+            className="btn btn-primary btn-block mb-4"
           >
             Нэвтрэх
           </button>
-          <div class="text-center">
+          <div className="text-center">
             <p>
               Хэрэглэгч биш үү?{" "}
               <a
@@ -108,6 +108,10 @@ const Login = ({ isLoggedIn, handleLogin }) => {
       </div>
     </>
   );
+};
+
+Login.propTypes = {
+  handleLogin: PropTypes.func.isRequired,
 };
 
 export default Login;

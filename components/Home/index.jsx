@@ -14,9 +14,7 @@ const Home = () => {
   const [transactions, setTransactions] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const [accountIndex, setAccountIndex] = useState(0);
-  const [error, setError] = useState(null);
   const [templates, setTemplates] = useState([]);
-  const [showTransfer, setShowTransfer] = useState([]);
   const [transferAmount, setTransferAmount] = useState("");
   const [description, setDescription] = useState("");
 
@@ -67,7 +65,6 @@ const Home = () => {
       })
       .catch((err) => {
         console.error(err);
-        setError("Failed to fetch data. Please try again later.");
       });
   };
 
@@ -105,18 +102,6 @@ const Home = () => {
     );
   };
 
-  const handleKeyDown = (event) => {
-    switch (event.key) {
-      case "ArrowLeft":
-        prev();
-        break;
-      case "ArrowRight":
-        next();
-        break;
-      default:
-        break;
-    }
-  };
   const handleLaunchModal = (index) => {
     const modalElement = modalRefs.current[index];
     const modal = new window.bootstrap.Modal(modalElement);
@@ -155,7 +140,7 @@ const Home = () => {
         },
         { withCredentials: true }
       );
-
+      console.log(data);
       fetchData();
       const modal = modalInstances[index];
       if (modal) {

@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 import { Card } from "react-bootstrap";
 import crypto from "crypto-browserify";
 
-
 const Transfer = () => {
   const navigate = useNavigate();
   const [userAccounts, setUserAccounts] = useState([]);
@@ -80,8 +79,7 @@ const Transfer = () => {
         { withCredentials: true }
       );
       if (data) {
-        
-        handleCloseModal(); 
+        handleCloseModal();
         navigate("/");
       }
     } catch (err) {
@@ -152,7 +150,6 @@ const Transfer = () => {
       setRecipientName(foundAccount.username);
     } else {
       console.log("not found");
-      
     }
   };
 
@@ -329,8 +326,8 @@ const Transfer = () => {
             aria-hidden={!showTemplateModal}
             style={{ display: showTemplateModal ? "block" : "none" }}
           >
-            <div class="modal-dialog" role="document">
-              <div class="modal-content">
+            <div className="modal-dialog" role="document">
+              <div className="modal-content">
                 <div className="modal-header">
                   <button
                     type="button"
@@ -342,15 +339,18 @@ const Transfer = () => {
                     <span aria-hidden="true">&times;</span>
                   </button>
                 </div>
-                <div class="modal-body">
+                <div className="modal-body">
                   <form>
-                    <div class="form-group">
-                      <label for="recipient-name" class="col-form-label">
+                    <div className="form-group">
+                      <label
+                        htmlFor="recipient-name"
+                        className="col-form-label"
+                      >
                         Загварын нэр:
                       </label>
                       <input
                         type="text"
-                        class="form-control"
+                        className="form-control"
                         id="recipient-name"
                         value={templateName}
                         onChange={(e) => setTemplateName(e.target.value)}
@@ -358,10 +358,10 @@ const Transfer = () => {
                     </div>
                   </form>
                 </div>
-                <div class="modal-footer">
+                <div className="modal-footer">
                   <button
                     type="button"
-                    class="btn btn-primary"
+                    className="btn btn-primary"
                     onClick={() => {
                       saveTemplate();
                     }}

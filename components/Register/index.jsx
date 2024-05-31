@@ -5,13 +5,15 @@ import { Navigate } from "react-router-dom";
 const Register = () => {
   const [loginName, setLoginName] = useState("");
   const [password, setPassword] = useState("");
-
+  const navigate = useNavigate();
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
       await axios
         .post(`/auth/register`, { loginName, password })
-        .then((res) => {});
+        .then((res) => {
+          console.log(res.data);
+        });
       navigate("/transfer");
     } catch (err) {
       console.error(err);
