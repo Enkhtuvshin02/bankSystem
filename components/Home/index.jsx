@@ -7,20 +7,19 @@ import moment from "moment";
 import crypto from "crypto-browserify";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import { Doughnut } from "react-chartjs-2";
-
+import { FaEye } from "react-icons/fa";
+import { FaEyeSlash } from "react-icons/fa";
 ChartJS.register(ArcElement, Tooltip, Legend);
 const Home = () => {
-  const modalRefs = useRef([]);
   const [transactions, setTransactions] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const [accountIndex, setAccountIndex] = useState(0);
   const [templates, setTemplates] = useState([]);
   const [transferAmount, setTransferAmount] = useState("");
-  const [description, setDescription] = useState("");
-  const [showModal, setShowModal] = useState(false);
+  const [description, setDescription] = useState(null);
   const [transactionPassword, setTransactionPassword] = useState("");
   const [transferDetail, setTransferDetail] = useState(null);
-
+  const [showPassword, setShowPassword] = useState(false);
   const openTransferDetail = (index) => {
     setTransferDetail(index);
   };
@@ -28,7 +27,6 @@ const Home = () => {
   const closeTransferDetail = () => {
     setTransferDetail(null);
   };
-  // Doughnut chart data
   const [chartData, setChartData] = useState({
     labels: ["Зарлага", "Орлого"],
     datasets: [
@@ -41,7 +39,6 @@ const Home = () => {
       },
     ],
   });
-  //newchanges new get request
   useEffect(() => {
     axios
       .all([
@@ -58,10 +55,10 @@ const Home = () => {
       .then((res) => {
         const [res1, res2, res3] = res;
         setTransactions(res1.data);
+        console.log(res1.data);
         setAccounts(res2.data);
         updateChartData(res1.data);
         setTemplates(res3.data);
-        console.log(res3.data);
       })
       .catch((err) => {
         console.error(err);
@@ -102,11 +99,20 @@ const Home = () => {
     );
   };
 
-  const handleLaunchModal = (index) => {
-    const modalElement = modalRefs.current[index];
-    const modal = new window.bootstrap.Modal(modalElement);
-    modal.show();
+  const [activeModal, setActiveModal] = useState(null);
+
+  const openModal = (id) => {
+    setActiveModal(id);
   };
+
+  const closeModal = () => {
+    setActiveModal(null);
+  };
+
+  const modals = [
+    { id: "modal1", title: "Modal 1", content: "Modal 1 content..." },
+    { id: "modal2", title: "Modal 2", content: "Modal 2 content..." },
+  ];
   const handleFormSubmit = async (e, index) => {
     e.preventDefault();
     const hashedTransactionPassword = await crypto
@@ -132,7 +138,10 @@ const Home = () => {
         { withCredentials: true }
       );
       console.log(data);
-      setShowModal(false);
+      const modal = new window.bootstrap.Modal(modalRefs.current[index]);
+      modal.hide();
+
+      forceUpdate();
     } catch (err) {
       console.log(err.response);
       if (err.response.data === "Recipient") {
@@ -335,13 +344,7 @@ const Home = () => {
               <Card className="h-100">
                 <Card.Body className="templateContainer">
                   {templates.map((template, index) => (
-                    <div
-                      key={index}
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                      }}
-                    >
+                    <div key={index}>
                       <h5>{template.templateName}</h5>
                       <p>
                         {template.bankName + " "}
@@ -350,27 +353,29 @@ const Home = () => {
                       <button
                         type="button"
                         className="btn btn-primary"
-                        onClick={() => handleLaunchModal(index)}
+                        onClick={() => openModal(index)}
                       >
                         Гүйлгээ
                       </button>
-
                       <div
-                        className="modal fade"
-                        ref={(el) => (modalRefs.current[index] = el)}
-                        id={`exampleModal${index}`}
+                        className={`modal ${
+                          activeModal === index ? "show" : ""
+                        }`}
+                        id={index}
                         tabIndex="-1"
                         role="dialog"
-                        aria-labelledby={`exampleModalLabel${index}`}
-                        aria-hidden="true"
+                        style={{
+                          display: activeModal === index ? "block" : "none",
+                        }}
                       >
                         <div className="modal-dialog" role="document">
                           <div className="modal-content">
                             <div className="modal-header">
+                              <h5 className="modal-title"></h5>
                               <button
                                 type="button"
                                 className="close"
-                                data-dismiss="modal"
+                                onClick={closeModal}
                                 aria-label="Close"
                               >
                                 <span aria-hidden="true">&times;</span>
@@ -380,6 +385,7 @@ const Home = () => {
                               <form
                                 className="transferForm"
                                 onSubmit={(e) => handleFormSubmit(e, index)}
+                                autoComplete="off"
                               >
                                 <div className="form-group">
                                   <input
@@ -388,6 +394,7 @@ const Home = () => {
                                     placeholder="Гүйлгээний дүн"
                                     value={template.senderAccount}
                                     disabled
+                                    autoComplete="off"
                                   />
                                 </div>
                                 <div className="form-group">
@@ -397,17 +404,7 @@ const Home = () => {
                                     placeholder="Гүйлгээний дүн"
                                     value={template.bankName}
                                     disabled
-                                  />
-                                </div>
-                                <div className="form-group">
-                                  <input
-                                    className="form-control"
-                                    type="text"
-                                    placeholder="Transfer amount"
-                                    value={transferAmount}
-                                    onChange={(e) =>
-                                      setTransferAmount(e.target.value)
-                                    }
+                                    autoComplete="off"
                                   />
                                 </div>
                                 <div className="form-group">
@@ -417,6 +414,7 @@ const Home = () => {
                                     placeholder="Recipient account"
                                     value={template.recipientAccount}
                                     disabled
+                                    autoComplete="off"
                                   />
                                 </div>
                                 <div className="form-group">
@@ -426,6 +424,19 @@ const Home = () => {
                                     placeholder="Recipient name"
                                     value={template.recipientName}
                                     disabled
+                                    autoComplete="off"
+                                  />
+                                </div>
+                                <div className="form-group">
+                                  <input
+                                    className="form-control"
+                                    type="text"
+                                    placeholder="Гүйлгээний дүн"
+                                    value={transferAmount}
+                                    onChange={(e) =>
+                                      setTransferAmount(e.target.value)
+                                    }
+                                    autoComplete="off"
                                   />
                                 </div>
                                 <div className="form-group">
@@ -437,79 +448,61 @@ const Home = () => {
                                     onChange={(e) =>
                                       setDescription(e.target.value)
                                     }
+                                    autoComplete="off"
                                   />
                                 </div>
+                                <div
+                                  className="form-group"
+                                  style={{
+                                    display: "flex",
+                                  }}
+                                >
+                                  <input
+                                    type={showPassword ? "text" : "password"}
+                                    className="form-control"
+                                    value={transactionPassword}
+                                    placeholder="Гүйлгээний нууц үг"
+                                    onChange={(e) => {
+                                      setTransactionPassword(e.target.value);
+                                    }}
+                                    autoComplete="new-password"
+                                  />{" "}
+                                  <div className="input-group-append">
+                                    <span
+                                      className="input-group-text"
+                                      style={{
+                                        cursor: "pointer",
+                                      }}
+                                    >
+                                      {!showPassword ? (
+                                        <FaEye
+                                          onClick={() => setShowPassword(true)}
+                                        />
+                                      ) : (
+                                        <FaEyeSlash
+                                          onClick={() => setShowPassword(false)}
+                                        />
+                                      )}
+                                    </span>
+                                  </div>
+                                </div>
+
                                 <button
-                                  type="button"
+                                  type="submit"
                                   className="btn btn-primary"
-                                  onClick={() => setShowModal(true)}
                                 >
                                   Гүйлгээ хийх
                                 </button>
-
-                                <div
-                                  className={`modal fade ${
-                                    showModal ? "show" : ""
-                                  }`}
-                                  id="exampleModal"
-                                  tabIndex="-1"
-                                  role="dialog"
-                                  aria-labelledby="exampleModalLabel"
-                                  aria-hidden={!showModal}
-                                  style={{
-                                    display: showModal ? "block" : "none",
-                                  }}
-                                >
-                                  <div className="modal-dialog" role="document">
-                                    <div className="modal-content">
-                                      <div className="modal-header">
-                                        <button
-                                          type="button"
-                                          className="close"
-                                          data-dismiss="modal"
-                                          aria-label="Close"
-                                          onClick={() => setShowModal(false)}
-                                        >
-                                          <span aria-hidden="true">
-                                            &times;
-                                          </span>
-                                        </button>
-                                      </div>
-                                      <div className="modal-body">
-                                        <form>
-                                          <div className="form-group">
-                                            <label
-                                              htmlFor="recipient-name"
-                                              className="col-form-label"
-                                            >
-                                              Гүйлгээний нууц үг
-                                            </label>
-                                            <input
-                                              type="password"
-                                              className="form-control"
-                                              id="recipient-name"
-                                              value={transactionPassword}
-                                              onChange={(e) => {
-                                                setTransactionPassword(
-                                                  e.target.value
-                                                );
-                                              }}
-                                            />
-                                          </div>
-                                        </form>
-                                      </div>
-                                      <div className="modal-footer">
-                                        <button
-                                          type="submit"
-                                          className="btn btn-primary"
-                                        >
-                                          Гүйлгээ хийх
-                                        </button>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
                               </form>
+                            </div>
+                            <div className="modal-footer">
+                              <button
+                                type="button"
+                                className="btn btn-secondary"
+                                onClick={closeModal}
+                              >
+                                Close
+                              </button>
                             </div>
                           </div>
                         </div>
@@ -572,7 +565,7 @@ const Home = () => {
                                 width: "fit-content",
                               }}
                             >
-                              {transaction.amount} USD
+                              {transaction.amount + " " + transaction.currency}
                             </p>
                             <button
                               type="button"

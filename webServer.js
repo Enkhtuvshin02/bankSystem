@@ -192,22 +192,34 @@ app.get("/transactionHistory", async (req, res) => {
   }
 
   try {
-    const userAccount = await Account.findOne({ userId: userId });
+    const userAccounts = await Account.find({ userId: userId });
 
-    const transactions = await Transaction.find({
-      $or: [
-        { senderAccount: userAccount.accountNumber },
-        { recipientAccount: userAccount.accountNumber },
-      ],
+    const transactionsPromises = userAccounts.map(async (account) => {
+      const transactions = await Transaction.find({
+        $or: [
+          { senderAccount: account.accountNumber },
+          { recipientAccount: account.accountNumber },
+        ],
+      }).lean(); // Use lean() to return plain objects
+      return transactions.map((transaction) => {
+        if (transaction.senderAccount === account.accountNumber) {
+          return {
+            ...transaction,
+            type: "expense",
+            currency: account.accountType,
+          };
+        } else if (transaction.recipientAccount === account.accountNumber) {
+          return {
+            ...transaction,
+            type: "income",
+            currency: account.accountType,
+          };
+        }
+      });
     });
 
-    const modifiedTransactions = transactions.map((transaction) => {
-      if (transaction.senderAccount === userAccount.accountNumber) {
-        return { ...transaction._doc, type: "expense" };
-      } else if (transaction.recipientAccount === userAccount.accountNumber) {
-        return { ...transaction._doc, type: "income" };
-      }
-    });
+    const transactions = await Promise.all(transactionsPromises);
+    const modifiedTransactions = transactions.flat();
 
     res.json(modifiedTransactions);
   } catch (err) {

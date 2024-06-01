@@ -4,7 +4,8 @@ import "./styles.css";
 import { useNavigate } from "react-router-dom";
 import { Card } from "react-bootstrap";
 import crypto from "crypto-browserify";
-
+import { FaEye } from "react-icons/fa";
+import { FaEyeSlash } from "react-icons/fa";
 const Transfer = () => {
   const navigate = useNavigate();
   const [userAccounts, setUserAccounts] = useState([]);
@@ -23,6 +24,7 @@ const Transfer = () => {
   const [templateName, setTemplateName] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const handleCloseModal = () => {
     setShowModal(false);
   };
@@ -267,15 +269,38 @@ const Transfer = () => {
                         >
                           Гүйлгээний нууц үг
                         </label>
-                        <input
-                          type="password"
-                          className="form-control"
-                          id="recipient-name"
-                          value={transactionPassword}
-                          onChange={(e) => {
-                            setTransactionPassword(e.target.value);
+                        <div
+                          style={{
+                            display: "flex",
                           }}
-                        />
+                        >
+                          {" "}
+                          <input
+                            type={showPassword ? "text" : "password"}
+                            className="form-control"
+                            id="recipient-name"
+                            value={transactionPassword}
+                            onChange={(e) => {
+                              setTransactionPassword(e.target.value);
+                            }}
+                          />
+                          <div className="input-group-append">
+                            <span
+                              className="input-group-text"
+                              style={{
+                                cursor: "pointer",
+                              }}
+                            >
+                              {!showPassword ? (
+                                <FaEye onClick={() => setShowPassword(true)} />
+                              ) : (
+                                <FaEyeSlash
+                                  onClick={() => setShowPassword(false)}
+                                />
+                              )}
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     </form>
                   </div>

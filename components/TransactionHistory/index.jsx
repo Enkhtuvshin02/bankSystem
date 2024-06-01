@@ -119,8 +119,7 @@ const TransactionHistory = () => {
                   color: transaction.type === "expense" ? "red" : "green",
                 }}
               >
-                {transaction.amount + " "}
-                {transaction.currency}
+                {transaction.amount + " " + transaction.currency}
               </p>
             </div>
             <div className="col-2">
@@ -159,7 +158,8 @@ const TransactionHistory = () => {
                   </div>
                   <div className="modal-body">
                     <p>
-                      Дүн: {transaction.amount},{transaction.currency}
+                      Дүн: {transaction.amount + " "}
+                      {transaction.currency}
                     </p>
                     <p>Төрөл: {transaction.type}</p>
                     <p>
