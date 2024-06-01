@@ -1,17 +1,30 @@
-import React from "react";
+import React, { useState } from "react";
 import PropTypes from "prop-types";
-
-function Navbar({ loggedUsersName, handleLogout }) {
+import { useEffect } from "react";
+import axios from "axios";
+function Navbar({ handleLogout }) {
+  const [loggedUsersName, setLoggedUsersName] = useState(null);
+  useEffect(() => {
+    axios
+      .get(`/getName`, {
+        withCredentials: true,
+      })
+      .then((res) => {
+        setLoggedUsersName(res.data.username);
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  }, []);
   return (
     <div>
       <ul className="nav justify-content-end">
-        {loggedUsersName && (
-          <li className="nav-item">
-            <a className="nav-link" href="#">
-              {loggedUsersName}
-            </a>
-          </li>
-        )}
+        <li className="nav-item">
+          <a className="nav-link" href="#">
+            {loggedUsersName}
+          </a>
+        </li>
+
         <li className="nav-item">
           <a
             className="nav-link"
@@ -29,7 +42,6 @@ function Navbar({ loggedUsersName, handleLogout }) {
 }
 
 Navbar.propTypes = {
-  loggedUsersName: PropTypes.string,
   handleLogout: PropTypes.func.isRequired,
 };
 

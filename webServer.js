@@ -18,26 +18,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const app = express();
 
-// Session configuration with connect-mongo
-app.use(
-  session({
-    name: "session",
-    secret: process.env.SESSION_SECRET || "secretKey",
-    resave: false,
-    saveUninitialized: false,
-    store: MongoStore.create({
-      mongoUrl: process.env.DB_URI,
-      dbName: "bankSystem",
-      collectionName: "sessions",
-    }),
-    cookie: {
-      secure: process.env.NODE_ENV === "production",
-      httpOnly: true,
-      maxAge: 1000 * 60 * 60 * 24, // 1 day
-    },
-  })
-);
-
 app.use(express.static(__dirname));
 app.use(express.json());
 app.use(cookieParser());
@@ -53,28 +33,30 @@ mongoose
     console.log(err);
   });
 
-const sessionSchema = new mongoose.Schema(
-  {},
-  { strict: false, collection: "sessions" }
-);
-const Session = mongoose.model("Session", sessionSchema);
-
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
 app.get("/isLoggedIn", async (req, res) => {
-  const sessionCookie = req.cookies.session;
-  if (!sessionCookie || !sessionCookie.isLoggedIn) {
+  const userId = req.cookies.userId;
+  const username = req.cookies.username;
+
+  if (!userId) {
     res.json({ isLoggedIn: false });
   } else {
-    res.json({
-      isLoggedIn: sessionCookie.isLoggedIn,
-      username: sessionCookie.username,
-    });
+    res.json({ isLoggedIn: true, username });
   }
 });
 
+app.get("/getName", async (req, res) => {
+  const username = req.cookies.username;
+
+  if (!username) {
+    res.json("Not logged in");
+  } else {
+    res.json({ username });
+  }
+});
 app.post("/auth/login", async (req, res) => {
   const { loginName, password } = req.body;
   try {
@@ -91,16 +73,23 @@ app.post("/auth/login", async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    req.session.isLoggedIn = true;
-    req.session.userId = user._id;
-    req.session.username = `${user.firstName} ${user.lastName}`;
+    res.cookie("userId", user._id, { httpOnly: true });
+    res.cookie("username", `${user.firstName} ${user.lastName}`, {
+      httpOnly: true,
+    });
 
-    res.cookie("session", req.session);
-    res.status(200).json({ message: "success", sessionId: req.sessionID });
+    res.status(200).json({ message: "Login successful" });
   } catch (err) {
     console.error("Error logging in:", err);
     res.status(500).json({ message: "Failed to log in" });
   }
+});
+
+app.post("/auth/logout", (req, res) => {
+  res.clearCookie("userId", { httpOnly: true });
+  res.clearCookie("username", { httpOnly: true });
+
+  res.status(200).json({ message: "Logged out successfully" });
 });
 
 app.post("/saveTemplate", async (req, res) => {
@@ -125,8 +114,7 @@ app.post("/saveTemplate", async (req, res) => {
 });
 
 app.get("/getTemplates", (req, res) => {
-  const sessionCookie = req.cookies.session;
-  const userId = sessionCookie.userId;
+  const userId = req.cookies.userId;
 
   Template.find({ userId })
     .then(async (templates) => {
@@ -154,21 +142,6 @@ app.get("/getTemplates", (req, res) => {
       console.error("Error fetching templates:", err);
       res.status(500).json({ error: "Failed to fetch templates" });
     });
-});
-app.post("/auth/logout", (req, res) => {
-  req.session.destroy((err) => {
-    if (err) {
-      console.error("Error destroying session:", err);
-      return res.status(500).json({ message: "Failed to log out" });
-    } else {
-      res.clearCookie("session", {
-        path: "/",
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-      });
-      return res.status(200).json({ message: "Logged out successfully" });
-    }
-  });
 });
 
 app.post("/auth/register", async (req, res) => {
@@ -213,8 +186,7 @@ app.get("/user/list", (req, res) => {
     });
 });
 app.get("/transactionHistory", async (req, res) => {
-  const sessionCookie = req.cookies.session;
-  const userId = sessionCookie.userId;
+  const userId = req.cookies.userId;
   if (!userId) {
     return res.status(401).json({ error: "Unauthorized" });
   }
@@ -244,8 +216,7 @@ app.get("/transactionHistory", async (req, res) => {
   }
 });
 app.post("/transfer", async (req, res) => {
-  const sessionCookie = req.cookies.session;
-  const senderUserId = sessionCookie.userId;
+  const senderUserId = req.cookies.userId;
 
   if (!senderUserId) {
     return res.status(401).json({ error: "Unauthorized" });
@@ -301,8 +272,7 @@ app.post("/transfer", async (req, res) => {
 });
 
 app.get("/getAccounts", async (req, res) => {
-  const sessionCookie = req.cookies.session;
-  const userId = sessionCookie.userId;
+  const userId = req.cookies.userId;
   if (!userId) {
     return res.status(401).json({ error: "Unauthorized" });
   }
@@ -354,8 +324,7 @@ app.get("/getBanks", async (req, res) => {
 });
 
 app.get("/getPersonalAccounts", async (req, res) => {
-  const sessionCookie = req.cookies.session;
-  const userId = sessionCookie.userId;
+  const userId = req.cookies.userId;
   if (!userId) {
     return res.status(401).json({ error: "Unauthorized" });
   }

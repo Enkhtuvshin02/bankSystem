@@ -103,9 +103,7 @@ const AppContent = () => {
 
   return (
     <>
-      {isLoggedIn ? (
-        <Topbar loggedUsersName={loggedUsersName} handleLogout={handleLogout} />
-      ) : null}
+      {isLoggedIn ? <Topbar handleLogout={handleLogout} /> : null}
       <div className="main">
         {isLoggedIn ? <SideNav /> : null}
         <Routes>
