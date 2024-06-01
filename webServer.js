@@ -87,7 +87,6 @@ app.post("/auth/login", async (req, res) => {
       .createHash("sha256")
       .update(password + user.salt)
       .digest("hex");
-
     if (hashedPassword !== user.password) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
@@ -108,24 +107,12 @@ app.post("/saveTemplate", async (req, res) => {
   const sessionCookie = req.cookies.session;
   const userId = sessionCookie.userId;
   try {
-    const {
-      templateName,
-      selectedAccountNumber,
-      recipientName,
-      selectedBank,
-      recipientAccount,
-      selectedAccountType,
-      recipientUserId,
-    } = req.body;
+    const { templateName, selectedAccountNumber, recipientAccount } = req.body;
     const newTemplate = new Template({
       userId,
       templateName: templateName,
       senderAccount: selectedAccountNumber,
-      recipientName: recipientName,
-      recipientBank: selectedBank,
       recipientAccount: recipientAccount,
-      currency: selectedAccountType,
-      receiverUserId: recipientUserId,
     });
     await newTemplate.save();
 
@@ -145,10 +132,19 @@ app.get("/getTemplates", (req, res) => {
     .then(async (templates) => {
       const templatesWithBankNames = await Promise.all(
         templates.map(async (template) => {
-          const bank = await Bank.findById(template.recipientBank);
+          const account = await Account.findOne({
+            accountNumber: template.recipientAccount,
+          });
+          const user = await User.findOne({
+            _id: account.userId,
+          });
+          const bank = await Bank.findOne({
+            _id: account.bankId,
+          });
           return {
             ...template._doc,
             bankName: bank ? bank.name : "Unknown Bank",
+            recipientName: user.firstName + " " + user.lastName,
           };
         })
       );
@@ -216,7 +212,6 @@ app.get("/user/list", (req, res) => {
       res.status(500).json({ error: "Failed to fetch users" });
     });
 });
-
 app.get("/transactionHistory", async (req, res) => {
   const sessionCookie = req.cookies.session;
   const userId = sessionCookie.userId;
@@ -225,14 +220,19 @@ app.get("/transactionHistory", async (req, res) => {
   }
 
   try {
+    const userAccount = await Account.findOne({ userId: userId });
+
     const transactions = await Transaction.find({
-      $or: [{ senderUserId: userId }, { receiverUserId: userId }],
+      $or: [
+        { senderAccount: userAccount.accountNumber },
+        { recipientAccount: userAccount.accountNumber },
+      ],
     });
 
     const modifiedTransactions = transactions.map((transaction) => {
-      if (transaction.senderUserId.toString() === userId) {
+      if (transaction.senderAccount === userAccount.accountNumber) {
         return { ...transaction._doc, type: "expense" };
-      } else if (transaction.receiverUserId.toString() === userId) {
+      } else if (transaction.recipientAccount === userAccount.accountNumber) {
         return { ...transaction._doc, type: "income" };
       }
     });
@@ -243,7 +243,6 @@ app.get("/transactionHistory", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch transactions" });
   }
 });
-
 app.post("/transfer", async (req, res) => {
   const sessionCookie = req.cookies.session;
   const senderUserId = sessionCookie.userId;
@@ -255,25 +254,18 @@ app.post("/transfer", async (req, res) => {
   try {
     const {
       senderAccount,
-      recipientName,
-      recipientBank,
       recipientAccount,
       description,
       amount,
-      currency,
-      receiverUserId,
       transactionPassword,
-    } = req.body;
-
+    } = await req.body;
     const transferAmount = parseFloat(amount);
-
     const user = await User.findOne({ _id: senderUserId });
     if (transactionPassword !== user.transactionPassword) {
       return res.status(400).json("Transaction password didn't match");
     }
 
     const receiver = await Account.findOne({
-      bankId: recipientBank,
       accountNumber: recipientAccount,
     });
     if (!receiver) {
@@ -293,14 +285,9 @@ app.post("/transfer", async (req, res) => {
 
     const newTransaction = new Transaction({
       senderAccount,
-      recipientName,
-      recipientBank,
       recipientAccount,
       description,
       amount: transferAmount,
-      currency,
-      senderUserId,
-      receiverUserId,
     });
     await newTransaction.save();
 

@@ -18,7 +18,6 @@ const Transfer = () => {
   const [transferAmount, setTransferAmount] = useState("");
   const [recipientAccount, setRecipientAccount] = useState("");
   const [recipientName, setRecipientName] = useState("");
-  const [recipientUserId, setRecipientUserId] = useState("");
   const [description, setDescription] = useState("");
   const [transactionPassword, setTransactionPassword] = useState("");
   const [templateName, setTemplateName] = useState("");
@@ -67,13 +66,9 @@ const Transfer = () => {
         `transfer`,
         {
           senderAccount: selectedAccount.selectedAccountNumber,
-          recipientName: recipientName,
-          recipientBank: selectedBank,
           recipientAccount: recipientAccount,
           description: description,
           amount: transferAmount,
-          currency: selectedAccount.selectedAccountType,
-          receiverUserId: recipientUserId,
           transactionPassword: hashedTransactionPassword,
         },
         { withCredentials: true }
@@ -99,11 +94,7 @@ const Transfer = () => {
     if (
       !templateName ||
       !selectedAccount.selectedAccountNumber ||
-      !recipientName ||
-      !selectedBank ||
-      !recipientAccount ||
-      !selectedAccount.selectedAccountType ||
-      !recipientUserId
+      !recipientAccount
     ) {
       alert("Шаардлагтай талбаруудыг бөглөнө үү!");
       return;
@@ -115,11 +106,7 @@ const Transfer = () => {
         {
           templateName,
           selectedAccountNumber: selectedAccount.selectedAccountNumber,
-          recipientName,
-          selectedBank,
           recipientAccount,
-          selectedAccountType: selectedAccount.selectedAccountType,
-          recipientUserId,
         },
         { withCredentials: true }
       );
@@ -139,14 +126,12 @@ const Transfer = () => {
   const handleRecipientAccountChange = (e) => {
     const accountNumber = e.target.value;
     setRecipientAccount(accountNumber);
-
     const foundAccount = accounts.find(
       (acc) =>
         acc.accountNumber === accountNumber &&
         selectedAccount.selectedAccountType === acc.accountType
     );
     if (foundAccount) {
-      setRecipientUserId(foundAccount.userId);
       setRecipientName(foundAccount.username);
     } else {
       console.log("not found");

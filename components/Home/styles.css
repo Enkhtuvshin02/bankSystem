@@ -45,7 +45,14 @@
 .transactionContainer p {
   margin: 5px 0;
 }
-
+.transaction {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  width: 90%;
+  height: 450px;
+  margin-left: 40px;
+}
 .modal-body p {
   margin: 10px 0;
 }

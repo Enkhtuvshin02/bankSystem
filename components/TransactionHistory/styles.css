@@ -77,3 +77,14 @@
   top: 50px;
   right: 10px;
 }
+.detailBtnIcon {
+  display: none;
+}
+@media (max-width: 615px) {
+  .detailBtnIcon {
+    display: block;
+  }
+  .detailBtnText {
+    display: none;
+  }
+}

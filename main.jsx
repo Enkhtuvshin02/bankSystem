@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import ReactDOM from "react-dom";
+import ReactDOM from "react-dom/client";
 import {
-  HashRouter as Router, 
+  HashRouter as Router,
   Route,
   Routes,
   useNavigate,
@@ -22,7 +22,8 @@ const AppContent = () => {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(null);
   const [loggedUsersName, setLoggedUsersName] = useState(null);
-  const [timer, setTimer] = useState(600); 
+  const initialTimerValue = parseInt(localStorage.getItem("timer")) || 600;
+  const [timer, setTimer] = useState(initialTimerValue);
 
   useEffect(() => {
     axios
@@ -61,7 +62,9 @@ const AppContent = () => {
             handleLogout();
             return 0;
           }
-          return prevTimer - 1;
+          const newTimer = prevTimer - 1;
+          localStorage.setItem("timer", newTimer); // Save timer to localStorage
+          return newTimer;
         });
       }, 1000);
 
@@ -72,6 +75,7 @@ const AppContent = () => {
   const handleLogin = () => {
     setIsLoggedIn(true);
     setTimer(600);
+    localStorage.setItem("timer", 600); // Reset timer in localStorage on login
   };
 
   const handleLogout = () => {
@@ -80,6 +84,7 @@ const AppContent = () => {
       .then(() => {
         setIsLoggedIn(false);
         navigate("/login");
+        localStorage.removeItem("timer"); // Remove timer from localStorage on logout
       })
       .catch((err) => {
         console.error("Logout failed:", err);

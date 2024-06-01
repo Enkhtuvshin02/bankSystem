@@ -6,22 +6,27 @@ import Transaction from "./models/transaction.js";
 import crypto from "crypto";
 import dotenv from "dotenv";
 dotenv.config();
+
 // Connect to MongoDB
 mongoose
-  .connect(
-    process.env.DB_URI,
-    { dbName: "bankSystem" },
-    {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    }
-  )
+  .connect(process.env.DB_URI, {
+    dbName: "bankSystem",
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
   .then(() => {
     console.log("Connected to MongoDB");
   })
   .catch((err) => {
     console.error("Error connecting to MongoDB", err);
   });
+
+const hashPassword = (password, salt) => {
+  return crypto
+    .createHash("sha256")
+    .update(password + salt)
+    .digest("hex");
+};
 
 const loadDatabase = async () => {
   try {
@@ -39,48 +44,44 @@ const loadDatabase = async () => {
     ]);
 
     // Create sample users with the updated schema
-    const users = await User.insertMany([
-      {
-        firstName: "John",
-        lastName: "Doe",
-        loginName: "johndoe",
-        salt: crypto.randomBytes(8).toString("hex"),
-        password: "1234",
-        transactionPassword: "1234",
-      },
-      {
-        firstName: "Jane",
-        lastName: "Doe",
-        loginName: "janedoe",
-        salt: crypto.randomBytes(8).toString("hex"),
-        password: "1234",
-        transactionPassword: "1234",
-      },
-      {
-        firstName: "Jim",
-        lastName: "Beam",
-        loginName: "jimbeam",
-        salt: crypto.randomBytes(8).toString("hex"),
-        password: "1234",
-        transactionPassword: "1234",
-      },
-      {
-        firstName: "Jack",
-        lastName: "Daniels",
-        loginName: "jackdaniels",
-        salt: crypto.randomBytes(8).toString("hex"),
-        password: "1234",
-        transactionPassword: "1234",
-      },
-      {
-        firstName: "Johnny",
-        lastName: "Walker",
-        loginName: "johnnywalker",
-        salt: crypto.randomBytes(8).toString("hex"),
-        password: "1234",
-        transactionPassword: "1234",
-      },
-    ]);
+    const users = await User.insertMany(
+      [
+        {
+          firstName: "John",
+          lastName: "Doe",
+          loginName: "johndoe",
+          salt: crypto.randomBytes(8).toString("hex"),
+        },
+        {
+          firstName: "Jane",
+          lastName: "Doe",
+          loginName: "janedoe",
+          salt: crypto.randomBytes(8).toString("hex"),
+        },
+        {
+          firstName: "Jim",
+          lastName: "Beam",
+          loginName: "jimbeam",
+          salt: crypto.randomBytes(8).toString("hex"),
+        },
+        {
+          firstName: "Jack",
+          lastName: "Daniels",
+          loginName: "jackdaniels",
+          salt: crypto.randomBytes(8).toString("hex"),
+        },
+        {
+          firstName: "Johnny",
+          lastName: "Walker",
+          loginName: "johnnywalker",
+          salt: crypto.randomBytes(8).toString("hex"),
+        },
+      ].map((user) => ({
+        ...user,
+        password: hashPassword("1234", user.salt),
+        transactionPassword: hashPassword("1234", user.salt),
+      }))
+    );
 
     // Create sample accounts (some users with multiple accounts in the same bank)
     const accounts = await Account.insertMany([
@@ -139,69 +140,39 @@ const loadDatabase = async () => {
     const transactions = await Transaction.insertMany([
       {
         senderAccount: accounts[0].accountNumber,
-        recipientName: `${users[3].firstName} ${users[3].lastName}`,
-        recipientBank: banks[0]._id,
         recipientAccount: accounts[4].accountNumber,
         description: "Payment for services",
         amount: 100,
-        currency: "USD",
-        senderUserId: users[0]._id,
-        receiverUserId: users[3]._id,
       },
       {
         senderAccount: accounts[1].accountNumber,
-        recipientName: `${users[2].firstName} ${users[2].lastName}`,
-        recipientBank: banks[2]._id,
         recipientAccount: accounts[3].accountNumber,
         description: "Gift",
         amount: 200,
-        currency: "CAD",
-        senderUserId: users[0]._id,
-        receiverUserId: users[2]._id,
       },
       {
         senderAccount: accounts[2].accountNumber,
-        recipientName: `${users[4].firstName} ${users[4].lastName}`,
-        recipientBank: banks[1]._id,
         recipientAccount: accounts[5].accountNumber,
         description: "Loan repayment",
         amount: 300,
-        currency: "JPY",
-        senderUserId: users[1]._id,
-        receiverUserId: users[4]._id,
       },
       {
         senderAccount: accounts[5].accountNumber,
-        recipientName: `${users[1].firstName} ${users[1].lastName}`,
-        recipientBank: banks[1]._id,
         recipientAccount: accounts[2].accountNumber,
         description: "Purchase",
         amount: 150,
-        currency: "JPY",
-        senderUserId: users[4]._id,
-        receiverUserId: users[1]._id,
       },
       {
         senderAccount: accounts[3].accountNumber,
-        recipientName: `${users[4].firstName} ${users[4].lastName}`,
-        recipientBank: banks[1]._id,
         recipientAccount: accounts[6].accountNumber,
         description: "Transfer",
         amount: 250,
-        currency: "CAD",
-        senderUserId: users[2]._id,
-        receiverUserId: users[4]._id,
       },
       {
         senderAccount: accounts[4].accountNumber,
-        recipientName: `${users[0].firstName} ${users[0].lastName}`,
-        recipientBank: banks[0]._id,
         recipientAccount: accounts[0].accountNumber,
         description: "Payment",
         amount: 350,
-        currency: "USD",
-        senderUserId: users[3]._id,
-        receiverUserId: users[0]._id,
       },
     ]);
 

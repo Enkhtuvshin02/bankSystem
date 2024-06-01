@@ -17,10 +17,10 @@ const Home = () => {
   const [templates, setTemplates] = useState([]);
   const [transferAmount, setTransferAmount] = useState("");
   const [description, setDescription] = useState("");
-
+  const [showModal, setShowModal] = useState(false);
   const [transactionPassword, setTransactionPassword] = useState("");
   const [transferDetail, setTransferDetail] = useState(null);
-  const [modalInstances, setModalInstances] = useState([]);
+
   const openTransferDetail = (index) => {
     setTransferDetail(index);
   };
@@ -28,6 +28,7 @@ const Home = () => {
   const closeTransferDetail = () => {
     setTransferDetail(null);
   };
+  // Doughnut chart data
   const [chartData, setChartData] = useState({
     labels: ["Зарлага", "Орлого"],
     datasets: [
@@ -40,10 +41,8 @@ const Home = () => {
       },
     ],
   });
+  //newchanges new get request
   useEffect(() => {
-    fetchData();
-  }, []);
-  const fetchData = () => {
     axios
       .all([
         axios.get(`/transactionHistory`, {
@@ -62,11 +61,12 @@ const Home = () => {
         setAccounts(res2.data);
         updateChartData(res1.data);
         setTemplates(res3.data);
+        console.log(res3.data);
       })
       .catch((err) => {
         console.error(err);
       });
-  };
+  }, []);
 
   const updateChartData = (transactionsData) => {
     let expenses = 0;
@@ -106,11 +106,6 @@ const Home = () => {
     const modalElement = modalRefs.current[index];
     const modal = new window.bootstrap.Modal(modalElement);
     modal.show();
-    setModalInstances((prev) => {
-      const newInstances = [...prev];
-      newInstances[index] = modal;
-      return newInstances;
-    });
   };
   const handleFormSubmit = async (e, index) => {
     e.preventDefault();
@@ -129,37 +124,28 @@ const Home = () => {
         `/transfer`,
         {
           senderAccount: templates[index].senderAccount,
-          recipientName: templates[index].recipientName,
-          recipientBank: templates[index].recipientBank,
           recipientAccount: templates[index].recipientAccount,
           description: description,
           amount: transferAmount,
-          currency: templates[index].currency,
-          receiverUserId: templates[index].receiverUserId,
           transactionPassword: hashedTransactionPassword,
         },
         { withCredentials: true }
       );
       console.log(data);
-      fetchData();
-      const modal = modalInstances[index];
-      if (modal) {
-        modal.hide();
-      }
+      setShowModal(false);
     } catch (err) {
       console.log(err.response);
       if (err.response.data === "Recipient") {
         alert("Check account number or bank");
       } else if (err.response.data === "Balance") {
         alert("Balance not enough");
-      } else if (err.response.data === "Transaction password ") {
-        alert("Password didn't match");
+      } else if (err.response.data === "Transaction password") {
+        alert("Balance not enough");
       } else {
         alert("Transfer failed");
       }
     }
   };
-
   return (
     <Container fluid className="p-3">
       <Row className="bentoRow">
@@ -263,7 +249,7 @@ const Home = () => {
                                         }}
                                       >
                                         {" "}
-                                        10/2
+                                        10/2{index}
                                       </p>
                                     </div>
                                   </div>
@@ -298,7 +284,7 @@ const Home = () => {
                                           background: "white",
                                         }}
                                       >
-                                        821
+                                        82{index}
                                       </p>
                                     </div>
                                   </div>
@@ -453,29 +439,76 @@ const Home = () => {
                                     }
                                   />
                                 </div>
-                                <div className="form-group">
-                                  <label
-                                    htmlFor="recipient-name"
-                                    className="col-form-label"
-                                  >
-                                    Гүйлгээний нууц үг
-                                  </label>
-                                  <input
-                                    type="password"
-                                    className="form-control"
-                                    id="recipient-name"
-                                    value={transactionPassword}
-                                    onChange={(e) => {
-                                      setTransactionPassword(e.target.value);
-                                    }}
-                                  />
-                                </div>{" "}
                                 <button
-                                  type="submit"
+                                  type="button"
                                   className="btn btn-primary"
+                                  onClick={() => setShowModal(true)}
                                 >
                                   Гүйлгээ хийх
                                 </button>
+
+                                <div
+                                  className={`modal fade ${
+                                    showModal ? "show" : ""
+                                  }`}
+                                  id="exampleModal"
+                                  tabIndex="-1"
+                                  role="dialog"
+                                  aria-labelledby="exampleModalLabel"
+                                  aria-hidden={!showModal}
+                                  style={{
+                                    display: showModal ? "block" : "none",
+                                  }}
+                                >
+                                  <div className="modal-dialog" role="document">
+                                    <div className="modal-content">
+                                      <div className="modal-header">
+                                        <button
+                                          type="button"
+                                          className="close"
+                                          data-dismiss="modal"
+                                          aria-label="Close"
+                                          onClick={() => setShowModal(false)}
+                                        >
+                                          <span aria-hidden="true">
+                                            &times;
+                                          </span>
+                                        </button>
+                                      </div>
+                                      <div className="modal-body">
+                                        <form>
+                                          <div className="form-group">
+                                            <label
+                                              htmlFor="recipient-name"
+                                              className="col-form-label"
+                                            >
+                                              Гүйлгээний нууц үг
+                                            </label>
+                                            <input
+                                              type="password"
+                                              className="form-control"
+                                              id="recipient-name"
+                                              value={transactionPassword}
+                                              onChange={(e) => {
+                                                setTransactionPassword(
+                                                  e.target.value
+                                                );
+                                              }}
+                                            />
+                                          </div>
+                                        </form>
+                                      </div>
+                                      <div className="modal-footer">
+                                        <button
+                                          type="submit"
+                                          className="btn btn-primary"
+                                        >
+                                          Гүйлгээ хийх
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
                               </form>
                             </div>
                           </div>
@@ -558,7 +591,18 @@ const Home = () => {
                               role="dialog"
                               aria-labelledby="exampleModalLabel"
                               aria-hidden="true"
-                              style={{ display: "block" }}
+                              style={{
+                                position: "fixed",
+                                top: "0",
+                                left: "0",
+                                right: "0",
+                                bottom: "0",
+                                backgroundColor: "rgba(0, 0, 0, 0.5)",
+                                display: "flex",
+                                justifyContent: "center",
+                                alignItems: "center",
+                                zIndex: "1000",
+                              }}
                             >
                               <div className="modal-dialog" role="document">
                                 <div className="modal-content">

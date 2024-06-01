@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "./styles.css";
-
+import { BiMessageSquareDetail } from "react-icons/bi";
 const TransactionHistory = () => {
   const [transactions, setTransactions] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -130,7 +130,8 @@ const TransactionHistory = () => {
                 data-toggle="modal"
                 data-target={`#exampleModal${index}`}
               >
-                Дэлгэрэнгүй
+                <BiMessageSquareDetail className="detailBtnIcon" />
+                <span className="detailBtnText">Дэлгэрэнгүй</span>
               </button>
             </div>
             <div
