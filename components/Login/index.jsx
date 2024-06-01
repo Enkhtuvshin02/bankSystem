@@ -109,7 +109,6 @@ const Login = ({ handleLogin }) => {
     </>
   );
 };
-
 Login.propTypes = {
   handleLogin: PropTypes.func.isRequired,
 };

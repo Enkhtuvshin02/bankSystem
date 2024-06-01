@@ -161,7 +161,10 @@ const TransactionHistory = () => {
                       Дүн: {transaction.amount + " "}
                       {transaction.currency}
                     </p>
-                    <p>Төрөл: {transaction.type}</p>
+                    <p>
+                      Төрөл:{" "}
+                      {transaction.type === "expense" ? "Зарлага" : "Орлого"}
+                    </p>
                     <p>
                       Огноо:{" "}
                       {moment(transaction.transactionDate).format(

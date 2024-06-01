@@ -20,6 +20,7 @@ const Home = () => {
   const [transactionPassword, setTransactionPassword] = useState("");
   const [transferDetail, setTransferDetail] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [update, setUpdate] = useState(false);
   const openTransferDetail = (index) => {
     setTransferDetail(index);
   };
@@ -63,7 +64,7 @@ const Home = () => {
       .catch((err) => {
         console.error(err);
       });
-  }, []);
+  }, [update]);
 
   const updateChartData = (transactionsData) => {
     let expenses = 0;
@@ -138,10 +139,8 @@ const Home = () => {
         { withCredentials: true }
       );
       console.log(data);
-      const modal = new window.bootstrap.Modal(modalRefs.current[index]);
-      modal.hide();
-
-      forceUpdate();
+      setUpdate(!update);
+      closeModal();
     } catch (err) {
       console.log(err.response);
       if (err.response.data === "Recipient") {
@@ -257,8 +256,7 @@ const Home = () => {
                                           width: "fit-content",
                                         }}
                                       >
-                                        {" "}
-                                        10/2{index}
+                                        28/12
                                       </p>
                                     </div>
                                   </div>
@@ -293,7 +291,7 @@ const Home = () => {
                                           background: "white",
                                         }}
                                       >
-                                        82{index}
+                                        827
                                       </p>
                                     </div>
                                   </div>
