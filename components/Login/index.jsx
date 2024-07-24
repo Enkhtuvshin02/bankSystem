@@ -20,6 +20,7 @@ const Login = ({ handleLogin }) => {
       );
       handleLogin(data);
       navigate("/");
+      console.log("Test");
     } catch (err) {
       console.error(err);
       alert("Invalid credentials");

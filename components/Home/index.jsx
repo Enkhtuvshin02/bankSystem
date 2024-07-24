@@ -56,6 +56,7 @@ const Home = () => {
       .then((res) => {
         const [res1, res2, res3] = res;
         setTransactions(res1.data);
+        console.log("test");
         console.log(res1.data);
 
 console.log("test from another resource");
