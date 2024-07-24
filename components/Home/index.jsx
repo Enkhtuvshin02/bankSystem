@@ -57,6 +57,8 @@ const Home = () => {
         const [res1, res2, res3] = res;
         setTransactions(res1.data);
         console.log(res1.data);
+
+console.log("test from another resource");
         setAccounts(res2.data);
         updateChartData(res1.data);
         setTemplates(res3.data);
